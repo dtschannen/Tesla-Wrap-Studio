@@ -1,4 +1,4 @@
-import { useEffect, useRef, forwardRef } from 'react';
+import { useEffect, useRef, forwardRef, useState } from 'react';
 import { Stage, Layer, Image as KonvaImage, Rect, Group } from 'react-konva';
 import type { Stage as StageType } from 'konva/lib/Stage';
 import { useEditorStore } from './state/useEditorStore';
@@ -12,6 +12,7 @@ import { LineLayer } from './components/layers/LineLayer';
 import { StarLayer } from './components/layers/StarLayer';
 import { TransformerWrapper } from './components/TransformerWrapper';
 import { BrushTool } from './components/BrushTool';
+import { CheckerboardPattern } from './components/CheckerboardPattern';
 import { loadImage } from '../utils/image';
 import { carModels } from '../data/carModels';
 import { getTemplateUrl } from '../utils/assets';
@@ -24,10 +25,32 @@ interface EditorCanvasProps {
   onAutoFitChange?: (autoFit: boolean) => void;
 }
 
+type CanvasBackground = 'gray' | 'black' | 'white' | 'transparent';
+
 export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ onStageReady, zoom = 1, onZoomChange, autoFit = true, onAutoFitChange }, ref) => {
   const stageRef = useRef<StageType | null>(null);
   const canvasAreaRef = useRef<HTMLDivElement | null>(null);
   const transformStartDataRef = useRef<{ layerId: string; width?: number; height?: number; scaleX: number; scaleY: number } | null>(null);
+  const [canvasBackground, setCanvasBackground] = useState<CanvasBackground>('gray');
+  const [showBackgroundDropdown, setShowBackgroundDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowBackgroundDropdown(false);
+      }
+    };
+
+    if (showBackgroundDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showBackgroundDropdown]);
   
   // Use zoom prop, default to 1
   const scale = zoom;
@@ -309,10 +332,53 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
   return (
     <div
       id="canvas-container"
-      className="relative w-full h-full flex flex-col bg-gradient-to-br from-tesla-black via-[#3a3b3c] to-tesla-black overflow-hidden"
+      className="relative w-full h-full flex flex-col overflow-hidden"
+      style={{
+        background: canvasBackground === 'gray' 
+          ? 'transparent'
+          : canvasBackground === 'black'
+          ? '#000000'
+          : canvasBackground === 'white'
+          ? '#ffffff'
+          : canvasBackground === 'transparent'
+          ? `
+            linear-gradient(45deg, #D7DCDD 25%, transparent 25%),
+            linear-gradient(-45deg, #D7DCDD 25%, transparent 25%),
+            linear-gradient(45deg, transparent 75%, #D7DCDD 75%),
+            linear-gradient(-45deg, transparent 75%, #D7DCDD 75%)
+          `
+          : 'linear-gradient(to bottom right, #4A4B4C, #3a3b3c, #4A4B4C)',
+        backgroundSize: canvasBackground === 'transparent' ? '20px 20px' : 'auto',
+        backgroundPosition: canvasBackground === 'transparent' ? '0 0, 0 10px, 10px -10px, -10px 0px' : '0 0',
+      }}
     >
       {/* Canvas Area */}
-      <div ref={canvasAreaRef} className="flex-1 flex items-center justify-center overflow-auto canvas-scrollbar" style={{ minHeight: 0 }}>
+      <div 
+        ref={canvasAreaRef} 
+        className="relative flex-1 flex items-center justify-center overflow-auto canvas-scrollbar" 
+        style={{ 
+          minHeight: 0,
+          ...(canvasBackground === 'gray' 
+            ? { backgroundColor: 'transparent', background: 'none' }
+            : canvasBackground === 'black'
+            ? { backgroundColor: '#000000' }
+            : canvasBackground === 'white'
+            ? { backgroundColor: '#ffffff' }
+            : canvasBackground === 'transparent'
+            ? {
+                background: `
+                  linear-gradient(45deg, #D7DCDD 25%, transparent 25%),
+                  linear-gradient(-45deg, #D7DCDD 25%, transparent 25%),
+                  linear-gradient(45deg, transparent 75%, #D7DCDD 75%),
+                  linear-gradient(-45deg, transparent 75%, #D7DCDD 75%)
+                `,
+                backgroundSize: '20px 20px',
+                backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
+              }
+            : { backgroundColor: 'transparent', background: 'none' }
+          ),
+        }}
+      >
         <div
           style={{
             transform: `scale(${scale})`,
@@ -452,6 +518,115 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
         <span className="text-xs font-medium text-tesla-gray min-w-[2rem] text-right">
           {zoomPercentage}%
         </span>
+        <div className="w-px h-3 bg-tesla-dark/40"></div>
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setShowBackgroundDropdown(!showBackgroundDropdown)}
+            className="p-1 rounded-lg text-tesla-gray hover:text-tesla-light hover:bg-tesla-dark/30 transition-colors flex items-center gap-1.5"
+            title="Canvas Background"
+            aria-label="Canvas Background"
+          >
+            {canvasBackground === 'gray' && (
+              <div className="w-3 h-3 rounded-sm bg-tesla-black border border-tesla-dark"></div>
+            )}
+            {canvasBackground === 'black' && (
+              <div className="w-3 h-3 rounded-sm bg-black border border-gray-600"></div>
+            )}
+            {canvasBackground === 'white' && (
+              <div className="w-3 h-3 rounded-sm bg-white border border-gray-400"></div>
+            )}
+            {canvasBackground === 'transparent' && (
+              <div 
+                className="w-3 h-3 rounded-sm border border-gray-500"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(45deg, #D7DCDD 25%, transparent 25%),
+                    linear-gradient(-45deg, #D7DCDD 25%, transparent 25%),
+                    linear-gradient(45deg, transparent 75%, #D7DCDD 75%),
+                    linear-gradient(-45deg, transparent 75%, #D7DCDD 75%)
+                  `,
+                  backgroundSize: '4px 4px',
+                  backgroundPosition: '0 0, 0 2px, 2px -2px, -2px 0px',
+                }}
+              ></div>
+            )}
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showBackgroundDropdown && (
+            <div className="absolute bottom-full right-0 mb-2 bg-tesla-black/95 backdrop-blur-xl border border-tesla-dark/50 rounded-xl shadow-xl overflow-hidden z-50">
+              <button
+                onClick={() => {
+                  setCanvasBackground('gray');
+                  setShowBackgroundDropdown(false);
+                }}
+                className={`w-full px-3 py-2 flex items-center gap-2 text-left text-xs transition-colors ${
+                  canvasBackground === 'gray'
+                    ? 'bg-tesla-dark/30 text-tesla-light'
+                    : 'text-tesla-light hover:bg-tesla-dark/50'
+                }`}
+              >
+                <div className="w-4 h-4 rounded-sm bg-tesla-black border border-tesla-dark"></div>
+                <span>Gray</span>
+              </button>
+              <button
+                onClick={() => {
+                  setCanvasBackground('black');
+                  setShowBackgroundDropdown(false);
+                }}
+                className={`w-full px-3 py-2 flex items-center gap-2 text-left text-xs transition-colors ${
+                  canvasBackground === 'black'
+                    ? 'bg-tesla-red/20 text-tesla-red'
+                    : 'text-tesla-light hover:bg-tesla-dark/50'
+                }`}
+              >
+                <div className="w-4 h-4 rounded-sm bg-black border border-gray-600"></div>
+                <span>Black</span>
+              </button>
+              <button
+                onClick={() => {
+                  setCanvasBackground('white');
+                  setShowBackgroundDropdown(false);
+                }}
+                className={`w-full px-3 py-2 flex items-center gap-2 text-left text-xs transition-colors ${
+                  canvasBackground === 'white'
+                    ? 'bg-tesla-red/20 text-tesla-red'
+                    : 'text-tesla-light hover:bg-tesla-dark/50'
+                }`}
+              >
+                <div className="w-4 h-4 rounded-sm bg-white border border-gray-400"></div>
+                <span>White</span>
+              </button>
+              <button
+                onClick={() => {
+                  setCanvasBackground('transparent');
+                  setShowBackgroundDropdown(false);
+                }}
+                className={`w-full px-3 py-2 flex items-center gap-2 text-left text-xs transition-colors ${
+                  canvasBackground === 'transparent'
+                    ? 'bg-tesla-red/20 text-tesla-red'
+                    : 'text-tesla-light hover:bg-tesla-dark/50'
+                }`}
+              >
+                <div 
+                  className="w-4 h-4 rounded-sm border border-gray-500"
+                  style={{
+                    backgroundImage: `
+                      linear-gradient(45deg, #D7DCDD 25%, transparent 25%),
+                      linear-gradient(-45deg, #D7DCDD 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #D7DCDD 75%),
+                      linear-gradient(-45deg, transparent 75%, #D7DCDD 75%)
+                    `,
+                    backgroundSize: '4px 4px',
+                    backgroundPosition: '0 0, 0 2px, 2px -2px, -2px 0px',
+                  }}
+                ></div>
+                <span>Transparent</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
