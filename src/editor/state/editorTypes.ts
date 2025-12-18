@@ -21,6 +21,8 @@ export interface BrushSettings {
   hardness: number;      // 0-100%
   opacity: number;       // 0-100%
   flow: number;          // 0-100%
+  spacing: number;       // 1-200% (brush spacing)
+  smoothing: number;    // 0-100% (stroke smoothing)
   blendMode: 'normal' | 'multiply' | 'screen' | 'overlay';
 }
 

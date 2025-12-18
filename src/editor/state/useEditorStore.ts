@@ -15,6 +15,8 @@ const defaultBrushSettings: BrushSettings = {
   hardness: 100,
   opacity: 100,
   flow: 100,
+  spacing: 25,      // 25% spacing (Photoshop default)
+  smoothing: 0,     // No smoothing by default
   blendMode: 'normal',
 };
 

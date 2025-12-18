@@ -14,6 +14,7 @@ import { FillLayer } from './components/layers/FillLayer';
 import { TransformerWrapper } from './components/TransformerWrapper';
 import { BrushTool } from './components/BrushTool';
 import { FillTool } from './components/FillTool';
+import { BrushCursor } from './components/BrushCursor';
 import { CheckerboardPattern } from './components/CheckerboardPattern';
 import { loadImage } from '../utils/image';
 import { carModels } from '../data/carModels';
@@ -470,6 +471,9 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
 
             {/* Transformer on top (not masked) */}
             <TransformerWrapper selectedLayerId={selectedLayerId} layers={layers} />
+            
+            {/* Brush Cursor (on top of everything, not masked) */}
+            <BrushCursor stageRef={stageRef} />
           </Layer>
           </Stage>
           <BrushTool stageRef={stageRef} />

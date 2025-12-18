@@ -13,9 +13,22 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
   const currentPoints = useRef<number[]>([]);
   const currentLayerId = useRef<string | null>(null);
   
+  // Subscribe to activeTool reactively so the effect re-runs when tool changes
+  const activeTool = useEditorStore((state) => state.activeTool);
+  
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
+    
+    // Only activate when brush or eraser tool is active
+    if (activeTool !== 'brush' && activeTool !== 'eraser') {
+      // Reset cursor when not brush/eraser
+      const container = stage.container();
+      if (container) {
+        container.style.cursor = 'default';
+      }
+      return;
+    }
 
     const getState = () => useEditorStore.getState();
     
@@ -42,13 +55,6 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
       }
       return `${baseName} ${index}`;
     };
-    
-    const { activeTool } = getState();
-    
-    // Only activate when brush or eraser tool is active
-    if (activeTool !== 'brush' && activeTool !== 'eraser') {
-      return;
-    }
 
     // Get or create brush layer
     const ensureBrushLayer = (): BrushLayer | null => {
@@ -95,6 +101,38 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
       return brushLayer || null;
     };
 
+    // Get correct pointer position accounting for CSS transform
+    const getCorrectPointerPosition = () => {
+      const pos = stage.getPointerPosition();
+      if (!pos) return null;
+      
+      // Get the CSS scale from the canvas wrapper
+      const container = stage.container();
+      if (!container) return pos;
+      
+      const wrapper = container.closest('.canvas-wrapper');
+      if (!wrapper) return pos;
+      
+      // Get the computed transform scale
+      const style = window.getComputedStyle(wrapper);
+      const transform = style.transform;
+      
+      if (transform && transform !== 'none') {
+        // Extract scale from matrix(a, b, c, d, tx, ty) where a is scaleX
+        const match = transform.match(/matrix\(([^,]+)/);
+        if (match) {
+          const cssScale = parseFloat(match[1]);
+          if (cssScale && cssScale !== 1) {
+            // Konva returns screen coordinates, need to convert to canvas coordinates
+            // The container's bounding rect is already scaled, so we need to adjust
+            return { x: pos.x, y: pos.y };
+          }
+        }
+      }
+      
+      return pos;
+    };
+
     const handleMouseDown = (e: any) => {
       // Prevent drawing on transformer handles
       const target = e.target;
@@ -112,7 +150,7 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
       isDrawing.current = true;
       currentLayerId.current = brushLayer.id;
       
-      const pos = stage.getPointerPosition();
+      const pos = getCorrectPointerPosition();
       if (pos) {
         currentPoints.current = [pos.x, pos.y];
       }
@@ -121,22 +159,40 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
     const handleMouseMove = () => {
       if (!isDrawing.current || !currentLayerId.current) return;
       
-      const pos = stage.getPointerPosition();
+      const pos = getCorrectPointerPosition();
       if (!pos) return;
+      
+      const { brushSettings } = getState();
+      
+      // Calculate spacing-based minimum distance
+      // Spacing is percentage of brush size (e.g., 25% = brush stamps every 25% of size)
+      const spacingDistance = (brushSettings.size * (brushSettings.spacing || 25)) / 100;
+      const minDistance = Math.max(1, spacingDistance);
       
       const lastX = currentPoints.current[currentPoints.current.length - 2];
       const lastY = currentPoints.current[currentPoints.current.length - 1];
       
-      // Only add point if moved enough (for smoother lines)
+      // Only add point if moved enough (based on spacing)
       const dx = pos.x - lastX;
       const dy = pos.y - lastY;
       const distance = Math.sqrt(dx * dx + dy * dy);
       
-      const { brushSettings } = getState();
-      const minDistance = Math.max(2, brushSettings.size / 20);
-      
       if (distance >= minDistance) {
-        currentPoints.current.push(pos.x, pos.y);
+        // Apply smoothing if enabled
+        let finalX = pos.x;
+        let finalY = pos.y;
+        
+        if (brushSettings.smoothing && brushSettings.smoothing > 0 && currentPoints.current.length >= 2) {
+          // Smoothing: interpolate between last point and current position
+          // Higher smoothing = more interpolation (smoother but less responsive)
+          const smoothingFactor = brushSettings.smoothing / 100;
+          const lastX = currentPoints.current[currentPoints.current.length - 2];
+          const lastY = currentPoints.current[currentPoints.current.length - 1];
+          finalX = lastX + (pos.x - lastX) * (1 - smoothingFactor * 0.5);
+          finalY = lastY + (pos.y - lastY) * (1 - smoothingFactor * 0.5);
+        }
+        
+        currentPoints.current.push(finalX, finalY);
         
         // Update the layer with current stroke for real-time preview
         const state = getState();
@@ -219,10 +275,10 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
     stage.on('mousemove touchmove', handleMouseMove);
     stage.on('mouseup touchend mouseleave', handleMouseUp);
 
-    // Change cursor
+    // Hide default cursor - we'll use custom brush cursor
     const container = stage.container();
     if (container) {
-      container.style.cursor = 'crosshair';
+      container.style.cursor = 'none';
     }
 
     return () => {
@@ -234,7 +290,7 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
         container.style.cursor = 'default';
       }
     };
-  }, [stageRef]);
+  }, [stageRef, activeTool]);
 
   // Handle keyboard shortcuts for tools
   useEffect(() => {

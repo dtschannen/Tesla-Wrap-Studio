@@ -63,7 +63,7 @@ const BrushSettingsPanel = () => {
           <input
             type="range"
             min="1"
-            max="200"
+            max="500"
             value={brushSettings.size}
             onChange={(e) => setBrushSettings({ size: parseInt(e.target.value) })}
             className="flex-1 h-2 bg-tesla-black rounded-lg appearance-none cursor-pointer accent-tesla-red"
@@ -71,7 +71,7 @@ const BrushSettingsPanel = () => {
           <input
             type="number"
             min="1"
-            max="200"
+            max="500"
             value={brushSettings.size}
             onChange={(e) => setBrushSettings({ size: parseInt(e.target.value) || 1 })}
             className="w-16 px-2 py-1 bg-tesla-black/60 border border-tesla-dark/50 rounded text-sm text-tesla-light text-center"
@@ -148,6 +148,44 @@ const BrushSettingsPanel = () => {
         </div>
       </div>
 
+      {/* Spacing */}
+      <div>
+        <label className="block text-xs font-medium text-tesla-gray mb-1.5">Spacing</label>
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min="1"
+            max="200"
+            value={brushSettings.spacing || 25}
+            onChange={(e) => setBrushSettings({ spacing: parseInt(e.target.value) })}
+            className="flex-1 h-2 bg-tesla-black rounded-lg appearance-none cursor-pointer accent-tesla-red"
+          />
+          <span className="text-xs text-tesla-gray w-10 text-right">{brushSettings.spacing || 25}%</span>
+        </div>
+        <div className="text-xs text-tesla-dark mt-1">
+          Controls brush stamp spacing along stroke
+        </div>
+      </div>
+
+      {/* Smoothing */}
+      <div>
+        <label className="block text-xs font-medium text-tesla-gray mb-1.5">Smoothing</label>
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={brushSettings.smoothing || 0}
+            onChange={(e) => setBrushSettings({ smoothing: parseInt(e.target.value) })}
+            className="flex-1 h-2 bg-tesla-black rounded-lg appearance-none cursor-pointer accent-tesla-red"
+          />
+          <span className="text-xs text-tesla-gray w-10 text-right">{brushSettings.smoothing || 0}%</span>
+        </div>
+        <div className="text-xs text-tesla-dark mt-1">
+          Reduces jitter for smoother strokes
+        </div>
+      </div>
+
       {/* Blend Mode (only for brush) */}
       {activeTool === 'brush' && (
         <div>
@@ -168,19 +206,37 @@ const BrushSettingsPanel = () => {
       {/* Brush Preview */}
       <div className="pt-3 border-t border-tesla-dark/30">
         <label className="block text-xs font-medium text-tesla-gray mb-2">Preview</label>
-        <div className="flex items-center justify-center bg-white/10 rounded-lg p-4 h-20">
-          <div
-            className="rounded-full transition-all"
+        <div className="flex items-center justify-center bg-gradient-to-br from-tesla-dark/50 to-tesla-black/50 rounded-lg p-6 h-24 relative overflow-hidden">
+          {/* Checkerboard background for transparency preview */}
+          <div 
+            className="absolute inset-0 opacity-20"
             style={{
-              width: Math.min(brushSettings.size, 60),
-              height: Math.min(brushSettings.size, 60),
+              backgroundImage: `
+                linear-gradient(45deg, #D7DCDD 25%, transparent 25%),
+                linear-gradient(-45deg, #D7DCDD 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #D7DCDD 75%),
+                linear-gradient(-45deg, transparent 75%, #D7DCDD 75%)
+              `,
+              backgroundSize: '8px 8px',
+              backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
+            }}
+          />
+          <div
+            className="rounded-full transition-all relative z-10"
+            style={{
+              width: Math.min(brushSettings.size / 3, 80),
+              height: Math.min(brushSettings.size / 3, 80),
               backgroundColor: activeTool === 'eraser' ? '#ffffff' : brushSettings.color,
               opacity: brushSettings.opacity / 100,
               boxShadow: brushSettings.hardness < 100 
-                ? `0 0 ${(100 - brushSettings.hardness) / 3}px ${activeTool === 'eraser' ? '#ffffff' : brushSettings.color}`
+                ? `0 0 ${(100 - brushSettings.hardness) / 2}px ${activeTool === 'eraser' ? '#ffffff' : brushSettings.color}`
                 : 'none',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
             }}
           />
+        </div>
+        <div className="text-xs text-tesla-gray text-center mt-2">
+          {brushSettings.size}px • {brushSettings.hardness}% hard • {brushSettings.opacity}% opacity
         </div>
       </div>
     </div>

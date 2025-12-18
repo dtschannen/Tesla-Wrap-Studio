@@ -3,7 +3,7 @@ import type { ToolType } from '../state/editorTypes';
 import { loadImage } from '../../utils/image';
 import {
   Move,
-  Paintbrush,
+  Brush,
   Eraser,
   Type,
   RectangleHorizontal,
@@ -54,7 +54,7 @@ export const ToolsPanel = () => {
       id: 'brush',
       label: 'Brush Tool',
       shortcut: 'B',
-      icon: <Paintbrush className="w-5 h-5" />,
+      icon: <Brush className="w-5 h-5" />,
     },
     {
       id: 'eraser',
