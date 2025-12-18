@@ -115,14 +115,17 @@ export const NewProjectDialog = ({ isOpen, onClose }: NewProjectDialogProps) => 
                 <button
                   key={model.id}
                   onClick={() => handleSelectModel(model.id)}
-                  title={model.name}
-                  className={`group relative rounded-lg overflow-hidden transition-all duration-150 focus:outline-none ${
+                  className={`group relative rounded-lg overflow-visible transition-all duration-150 focus:outline-none ${
                     selectedModelId === model.id
                       ? 'ring-2 ring-tesla-red'
                       : 'ring-1 ring-white/10 hover:ring-white/30'
                   }`}
                 >
-                  <div className="aspect-[4/3] bg-[#2c2c2e] flex items-center justify-center relative overflow-hidden">
+                  {/* Custom tooltip */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/90 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    {model.name}
+                  </div>
+                  <div className="aspect-[4/3] bg-[#2c2c2e] flex items-center justify-center relative overflow-hidden rounded-t-lg">
                     <img
                       src={getVehicleImageUrl(model.folderName)}
                       alt={model.name}
@@ -139,7 +142,7 @@ export const NewProjectDialog = ({ isOpen, onClose }: NewProjectDialogProps) => 
                       </div>
                     )}
                   </div>
-                  <div className="px-1.5 py-1.5 bg-[#252527]">
+                  <div className="px-1.5 py-1.5 bg-[#252527] rounded-b-lg">
                     <span className="text-[10px] font-medium text-white/70 truncate block text-center leading-tight">{model.name}</span>
                   </div>
                 </button>
