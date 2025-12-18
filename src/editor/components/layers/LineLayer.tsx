@@ -26,6 +26,10 @@ export const LineLayer = ({
   onTransformEnd,
   draggable,
 }: LineLayerProps) => {
+  // Make line easier to grab by increasing hit stroke width
+  // This makes the draggable area larger without changing visual appearance
+  const hitStrokeWidth = Math.max(layer.strokeWidth || 4, 20);
+
   const commonProps = {
     id: id || layer.id,
     points: layer.points,
@@ -42,6 +46,9 @@ export const LineLayer = ({
     lineJoin: layer.lineJoin || 'round',
     dash: layer.dash,
     listening: !layer.locked,
+    // Increase hit area for easier dragging
+    hitStrokeWidth: hitStrokeWidth,
+    perfectDrawEnabled: false,
     onClick,
     onTap,
     onDragStart,

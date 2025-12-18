@@ -23,6 +23,13 @@ export const TransformerWrapper = ({ selectedLayerId, layers, onTransformMove }:
     const stage = transformerRef.current.getStage();
     if (!stage) return;
 
+    // Don't show transformer for line layers (they use endpoint handles instead)
+    const selectedLayer = layers.find(l => l.id === selectedLayerId);
+    if (selectedLayer?.type === 'line') {
+      transformerRef.current.nodes([]);
+      return;
+    }
+
     const selectedNode = stage.findOne(`#${selectedLayerId}`);
     if (selectedNode) {
       transformerRef.current.nodes([selectedNode]);

@@ -15,6 +15,7 @@ import { TransformerWrapper } from './components/TransformerWrapper';
 import { BrushTool } from './components/BrushTool';
 import { FillTool } from './components/FillTool';
 import { BrushCursor } from './components/BrushCursor';
+import { LineEndpointHandles } from './components/LineEndpointHandles';
 import { loadImage } from '../utils/image';
 import { carModels } from '../data/carModels';
 import { getTemplateUrl } from '../utils/assets';
@@ -605,6 +606,8 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
                   listening: false,
                 } : {};
                 
+                const isLineLayer = layer.type === 'line';
+                
                 const commonProps = {
                   id: layer.id,
                   onClick: (e: any) => handleLayerClick(e, layer.id),
@@ -612,8 +615,9 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
                   onDragStart: isBrushLayer ? undefined : handleDragStart,
                   onDragMove: isBrushLayer ? undefined : handleDragMove,
                   onDragEnd: isBrushLayer ? undefined : (e: any) => handleDragEnd(e, layer.id),
-                  onTransformStart: isBrushLayer ? undefined : (e: any) => handleTransformStart(e, layer.id),
-                  onTransformEnd: isBrushLayer ? undefined : (e: any) => handleTransformEnd(e, layer.id),
+                  // Disable transform for line layers (they use endpoint handles instead)
+                  onTransformStart: (isBrushLayer || isLineLayer) ? undefined : (e: any) => handleTransformStart(e, layer.id),
+                  onTransformEnd: (isBrushLayer || isLineLayer) ? undefined : (e: any) => handleTransformEnd(e, layer.id),
                   draggable: !layer.locked && !isBrushLayer && !isFillToolActive,
                   ...fillLayerProps,
                 };
@@ -655,6 +659,13 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
             
             {/* Brush Cursor (on top of everything, not masked) */}
             <BrushCursor stageRef={stageRef} />
+          </Layer>
+          
+          {/* Line Endpoint Handles Layer (separate, not masked) */}
+          <Layer>
+            {selectedLayerId && layers.find(l => l.id === selectedLayerId)?.type === 'line' && (
+              <LineEndpointHandles layerId={selectedLayerId} />
+            )}
           </Layer>
           
           {/* Guide Lines Layer (separate, not masked) */}
