@@ -15,7 +15,6 @@ import { TransformerWrapper } from './components/TransformerWrapper';
 import { BrushTool } from './components/BrushTool';
 import { FillTool } from './components/FillTool';
 import { BrushCursor } from './components/BrushCursor';
-import { CheckerboardPattern } from './components/CheckerboardPattern';
 import { loadImage } from '../utils/image';
 import { carModels } from '../data/carModels';
 import { getTemplateUrl } from '../utils/assets';

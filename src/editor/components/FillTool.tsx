@@ -100,7 +100,7 @@ export const FillTool = ({ stageRef }: FillToolProps) => {
     const stage = stageRef.current;
     if (!stage || activeTool !== 'fill' || !templateImage) return;
     
-    const handleClick = async (e: any) => {
+    const handleClick = async () => {
       // Get the pointer position relative to the stage
       const pos = stage.getPointerPosition();
       if (!pos) return;
