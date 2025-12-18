@@ -92,7 +92,7 @@ export const useEditorStore = create<EditorStore>((set, get) => {
       } as Layer;
       
       set((state) => ({
-        layers: [...state.layers, newLayer],
+        layers: [newLayer, ...state.layers],
         selectedLayerId: newLayer.id,
       }));
       

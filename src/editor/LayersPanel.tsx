@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useEditorStore } from './state/useEditorStore';
 import { carModels } from '../data/carModels';
 import {
@@ -23,6 +24,8 @@ interface LayerItemProps {
 
 const LayerItem = ({ layer }: LayerItemProps) => {
   const { selectedLayerId, setSelection, updateLayer, deleteLayer } = useEditorStore();
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(layer.name);
   const {
     attributes,
     listeners,
@@ -39,6 +42,37 @@ const LayerItem = ({ layer }: LayerItemProps) => {
   };
 
   const isSelected = selectedLayerId === layer.id;
+
+  const handleNameClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditingName(true);
+    setEditedName(layer.name);
+  };
+
+  const handleNameBlur = () => {
+    if (editedName.trim() && editedName !== layer.name) {
+      updateLayer(layer.id, { name: editedName.trim() });
+    } else {
+      setEditedName(layer.name);
+    }
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleNameBlur();
+    } else if (e.key === 'Escape') {
+      setEditedName(layer.name);
+      setIsEditingName(false);
+    }
+  };
+
+  // Update editedName when layer name changes externally
+  useEffect(() => {
+    if (!isEditingName) {
+      setEditedName(layer.name);
+    }
+  }, [layer.name, isEditingName]);
 
   return (
     <div
@@ -62,7 +96,27 @@ const LayerItem = ({ layer }: LayerItemProps) => {
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-tesla-light truncate">{layer.name || 'Layer'}</div>
+          {isEditingName ? (
+            <input
+              type="text"
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
+              onBlur={handleNameBlur}
+              onKeyDown={handleNameKeyDown}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full px-2 py-1 bg-tesla-black/80 border border-tesla-red/50 rounded text-sm text-tesla-light focus:outline-none focus:ring-2 focus:ring-tesla-red/50"
+              aria-label="Layer name"
+              autoFocus
+            />
+          ) : (
+            <div
+              className="text-sm font-medium text-tesla-light truncate cursor-text hover:text-tesla-red/80 transition-colors"
+              onClick={handleNameClick}
+              title="Click to edit name"
+            >
+              {layer.name || 'Layer'}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <button

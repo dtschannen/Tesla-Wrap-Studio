@@ -210,15 +210,6 @@ export const PropertiesPanel = () => {
           <h3 className="text-xs font-semibold mb-3 text-tesla-gray uppercase tracking-wider">Common</h3>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-tesla-gray mb-1.5">Name</label>
-              <input
-                type="text"
-                value={selectedLayer.name}
-                onChange={(e) => updateProperty('name', e.target.value)}
-                className="w-full px-3 py-2 bg-tesla-black/60 border border-tesla-dark/50 rounded-lg text-sm text-tesla-light placeholder-tesla-dark focus:outline-none focus:ring-2 focus:ring-tesla-red/50 focus:border-tesla-red/50 transition-all"
-              />
-            </div>
-            <div>
               <label className="block text-xs font-medium text-tesla-gray mb-1.5">Opacity</label>
               <input
                 type="range"

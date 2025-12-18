@@ -18,13 +18,29 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
     if (!stage) return;
 
     const getState = () => useEditorStore.getState();
-    const nextLayerName = () => {
+    
+    const getLayerTypeName = (type: string): string => {
+      const typeMap: Record<string, string> = {
+        'brush': 'Brush',
+        'text': 'Text',
+        'rect': 'Rectangle',
+        'circle': 'Ellipse',
+        'line': 'Line',
+        'star': 'Star',
+        'image': 'Image',
+        'texture': 'Texture',
+      };
+      return typeMap[type] || 'Layer';
+    };
+
+    const nextLayerName = (layerType: string) => {
       const { layers } = getState();
+      const baseName = getLayerTypeName(layerType);
       let index = 1;
-      while (layers.some((l) => l.name === `Layer ${index}`)) {
+      while (layers.some((l) => l.name === `${baseName} ${index}`)) {
         index += 1;
       }
-      return `Layer ${index}`;
+      return `${baseName} ${index}`;
     };
     
     const { activeTool } = getState();
@@ -54,7 +70,7 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
         // Create new brush layer
         addLayer({
           type: 'brush',
-          name: nextLayerName(),
+          name: nextLayerName('brush'),
           strokes: [],
           visible: true,
           locked: false,
@@ -229,13 +245,29 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
       }
       
       const { setActiveTool, addLayer, setBrushSettings, brushSettings } = useEditorStore.getState();
-      const nextLayerName = () => {
+      
+      const getLayerTypeName = (type: string): string => {
+        const typeMap: Record<string, string> = {
+          'brush': 'Brush',
+          'text': 'Text',
+          'rect': 'Rectangle',
+          'circle': 'Ellipse',
+          'line': 'Line',
+          'star': 'Star',
+          'image': 'Image',
+          'texture': 'Texture',
+        };
+        return typeMap[type] || 'Layer';
+      };
+
+      const nextLayerName = (layerType: string) => {
         const { layers } = useEditorStore.getState();
+        const baseName = getLayerTypeName(layerType);
         let index = 1;
-        while (layers.some((l) => l.name === `Layer ${index}`)) {
+        while (layers.some((l) => l.name === `${baseName} ${index}`)) {
           index += 1;
         }
-        return `Layer ${index}`;
+        return `${baseName} ${index}`;
       };
       
       switch (e.key.toLowerCase()) {
@@ -251,7 +283,7 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
         case 't':
           addLayer({
             type: 'text',
-            name: nextLayerName(),
+            name: nextLayerName('text'),
             text: 'Sample Text',
             fontSize: 48,
             fontFamily: 'Arial',
@@ -274,7 +306,7 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
         case 'u':
           addLayer({
             type: 'rect',
-            name: nextLayerName(),
+            name: nextLayerName('rect'),
             width: 200,
             height: 100,
             fill: '#B73038',
@@ -292,7 +324,7 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
         case 'o':
           addLayer({
             type: 'circle',
-            name: nextLayerName(),
+            name: nextLayerName('circle'),
             radius: 50,
             fill: '#D7DCDD',
             visible: true,
@@ -309,7 +341,7 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
         case 'l':
           addLayer({
             type: 'line',
-            name: nextLayerName(),
+            name: nextLayerName('line'),
             points: [100, 100, 300, 200],
             stroke: '#ffffff',
             strokeWidth: 4,
@@ -329,7 +361,7 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
         case 's':
           addLayer({
             type: 'star',
-            name: nextLayerName(),
+            name: nextLayerName('star'),
             numPoints: 5,
             innerRadius: 30,
             outerRadius: 60,
@@ -364,7 +396,7 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
                   const img = await loadImage(src);
                   addLayer({
                     type: 'image',
-                    name: file.name || nextLayerName(),
+                    name: nextLayerName('image'),
                     src,
                     image: img,
                     visible: true,
@@ -403,7 +435,7 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
                   const img = await loadImage(src);
                   addLayer({
                     type: 'texture',
-                    name: file.name || nextLayerName(),
+                    name: nextLayerName('texture'),
                     src,
                     image: img,
                     visible: true,
