@@ -54,6 +54,7 @@ interface EditorStore extends EditorState {
   maxHistorySize: number;
   isDirty: boolean;  // Track unsaved changes
   projectName: string;
+  designId: string | null;  // Track if editing existing design from database
   
   // Actions
   addLayer: (layer: Omit<Layer, 'id'> | Record<string, any>) => void;
@@ -78,6 +79,7 @@ interface EditorStore extends EditorState {
   resetProject: () => void;
   markAsSaved: () => void;
   setProjectName: (name: string) => void;
+  setDesignId: (id: string | null) => void;
   getSerializedState: () => ProjectFile;
   loadProject: (project: ProjectFile) => Promise<void>;
 }
@@ -135,6 +137,7 @@ export const useEditorStore = create<EditorStore>((set, get) => {
     maxHistorySize: 50,
     isDirty: false,
     projectName: 'Untitled Project',
+    designId: null,
 
     addLayer: (layerData) => {
       const newLayer: Layer = {
@@ -280,6 +283,7 @@ export const useEditorStore = create<EditorStore>((set, get) => {
         historyIndex: 0,
         isDirty: false,
         projectName: 'Untitled Project',
+        designId: null,
         activeTool: 'select',
       });
     },
@@ -290,6 +294,10 @@ export const useEditorStore = create<EditorStore>((set, get) => {
     
     setProjectName: (name: string) => {
       set({ projectName: name });
+    },
+    
+    setDesignId: (id: string | null) => {
+      set({ designId: id });
     },
     
     getSerializedState: (): ProjectFile => {

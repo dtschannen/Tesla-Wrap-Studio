@@ -1,14 +1,19 @@
 import { useRef, useState, useEffect } from 'react';
 import { useEditorStore } from './state/useEditorStore';
+import { useAuth } from '../contexts/AuthContext';
 import logo from '../assets/logo.png';
 import { exportPng } from '../utils/exportPng';
+import { exportPngAsDataUrl } from '../utils/publish';
 import { carModels } from '../data/carModels';
-import { saveProjectToFile, loadProjectFromFile, getProjectFileAccept } from '../utils/projectFile';
+import { loadProjectFromFile, getProjectFileAccept } from '../utils/projectFile';
+import { saveProjectToSupabase } from '../utils/supabaseProjects';
+import { saveProjectToLocalStorage, clearSavedProject } from '../utils/localStorageProject';
 import { calculateImageScale } from '../utils/image';
 import { NewProjectDialog } from './components/NewProjectDialog';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { DownloadDialog } from './components/DownloadDialog';
 import { InfoDialog } from './components/InfoDialog';
+import { OpenProjectDialog } from './components/OpenProjectDialog';
 import type { Stage as StageType } from 'konva/lib/Stage';
 
 interface ToolbarProps {
@@ -25,11 +30,13 @@ export const Toolbar = ({ stageRef, onOpen3DPreview }: ToolbarProps) => {
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const [isInfoDropdownOpen, setIsInfoDropdownOpen] = useState(false);
+  const [isOpenProjectDialogOpen, setIsOpenProjectDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'new' | 'open' | null>(null);
   const infoDropdownRef = useRef<HTMLDivElement>(null);
   const [isEditingProjectName, setIsEditingProjectName] = useState(false);
   const [editingName, setEditingName] = useState('');
   
+  const { user } = useAuth();
   const {
     undo,
     redo,
@@ -43,6 +50,9 @@ export const Toolbar = ({ stageRef, onOpen3DPreview }: ToolbarProps) => {
     getSerializedState,
     loadProject,
     markAsSaved,
+    designId,
+    setDesignId,
+    layers,
   } = useEditorStore();
 
   const currentModel = carModels.find((m) => m.id === currentModelId) || carModels[0];
@@ -116,23 +126,81 @@ export const Toolbar = ({ stageRef, onOpen3DPreview }: ToolbarProps) => {
 
   // Handle Open Project button
   const handleOpenProject = () => {
+    // Check if user is logged in
+    if (!user) {
+      // Save current project state before redirecting (if there's work)
+      if (isDirty || layers.length > 0) {
+        const projectData = getSerializedState();
+        saveProjectToLocalStorage(projectData);
+      }
+      const returnUrl = encodeURIComponent(window.location.href);
+      window.open(`https://tesla-wrap.com/login?returnUrl=${returnUrl}`, '_blank');
+      return;
+    }
+
     if (isDirty) {
       setPendingAction('open');
       setIsConfirmDialogOpen(true);
     } else {
-      projectFileInputRef.current?.click();
+      // Show dialog to choose between local file or Supabase
+      setIsOpenProjectDialogOpen(true);
     }
+  };
+
+  const handleOpenLocalFileClick = () => {
+    setIsOpenProjectDialogOpen(false);
+    // Small delay to ensure dialog closes first
+    setTimeout(() => {
+      projectFileInputRef.current?.click();
+    }, 100);
   };
 
   // Handle Save Project
   const handleSaveProject = async () => {
-    try {
+    // Check if user is logged in
+    if (!user) {
+      // Save current project state before redirecting
       const projectData = getSerializedState();
-      await saveProjectToFile(projectData);
+      saveProjectToLocalStorage(projectData);
+      const returnUrl = encodeURIComponent(window.location.href);
+      window.open(`https://tesla-wrap.com/login?returnUrl=${returnUrl}`, '_blank');
+      return;
+    }
+
+    if (!stageRef.current) {
+      alert('Canvas not available');
+      return;
+    }
+
+    try {
+      // Generate preview image
+      const previewDataUrl = await exportPngAsDataUrl(stageRef.current);
+      if (!previewDataUrl) {
+        throw new Error('Failed to export preview image');
+      }
+
+      // Get project data
+      const projectData = getSerializedState();
+
+      // Save to Supabase
+      const savedDesign = await saveProjectToSupabase(
+        projectData,
+        previewDataUrl,
+        designId || undefined
+      );
+
+      // Update design ID if this was a new save
+      if (!designId) {
+        setDesignId(savedDesign.id);
+      }
+
+      // Clear any saved project from localStorage since we've successfully saved to cloud
+      clearSavedProject();
       markAsSaved();
+      alert('Project saved successfully to your account!');
     } catch (error: any) {
       console.error('Failed to save project:', error);
-      alert('Failed to save project. Please try again.');
+      alert(error.message || 'Failed to save project. Please try again.');
     }
   };
 
@@ -142,7 +210,7 @@ export const Toolbar = ({ stageRef, onOpen3DPreview }: ToolbarProps) => {
     if (pendingAction === 'new') {
       setIsNewProjectDialogOpen(true);
     } else if (pendingAction === 'open') {
-      projectFileInputRef.current?.click();
+      setIsOpenProjectDialogOpen(true);
     }
     setPendingAction(null);
   };
@@ -453,6 +521,13 @@ export const Toolbar = ({ stageRef, onOpen3DPreview }: ToolbarProps) => {
       <InfoDialog
         isOpen={isInfoDialogOpen}
         onClose={() => setIsInfoDialogOpen(false)}
+      />
+
+      {/* Publish Dialog */}
+      <OpenProjectDialog
+        isOpen={isOpenProjectDialogOpen}
+        onClose={() => setIsOpenProjectDialogOpen(false)}
+        onProjectLoaded={handleOpenLocalFileClick}
       />
     </>
   );

@@ -8,6 +8,9 @@ import { PropertiesPanel } from './PropertiesPanel';
 import { ThreeViewer } from '../viewer/ThreeViewer';
 import { NewProjectDialog } from './components/NewProjectDialog';
 import { useEditorStore } from './state/useEditorStore';
+import { useAuth } from '../contexts/AuthContext';
+import { loadProjectFromSupabase } from '../utils/supabaseProjects';
+import { loadProjectFromLocalStorage, clearSavedProject } from '../utils/localStorageProject';
 
 export const WrapDesignerPage = () => {
   const stageRef = useRef<StageType | null>(null);
@@ -17,13 +20,67 @@ export const WrapDesignerPage = () => {
   const [manualZoom, setManualZoom] = useState(1);
   const [autoFitZoom, setAutoFitZoom] = useState(1);
   const [autoFit, setAutoFit] = useState(true);
-  const { selectedLayerId, deleteLayer, undo, redo, updateLayer, layers } = useEditorStore();
+  const { selectedLayerId, deleteLayer, undo, redo, updateLayer, layers, loadProject, setDesignId } = useEditorStore();
+  const { user, loading: authLoading } = useAuth();
+  const [loadingDesign, setLoadingDesign] = useState(false);
 
   // Initialize auto-fit zoom (will be calculated by EditorCanvas when autoFit is true)
   // This is just for initial state, actual calculation happens in EditorCanvas
 
   // Use auto-fit zoom when autoFit is true, otherwise use manual zoom
   const currentZoom = autoFit ? autoFitZoom : manualZoom;
+
+  // Check for saved project in localStorage or design ID in URL parameter
+  useEffect(() => {
+    const loadProjectOnMount = async () => {
+      if (authLoading || loadingDesign) return;
+
+      const params = new URLSearchParams(window.location.search);
+      const designId = params.get('designId');
+
+      // Priority 1: Load from URL parameter (editing existing design from Gallery)
+      if (designId && user) {
+        setLoadingDesign(true);
+        try {
+          const project = await loadProjectFromSupabase(designId);
+          await loadProject(project);
+          setDesignId(designId);
+          setShowNewProjectDialog(false);
+          // Clean URL
+          window.history.replaceState({}, '', window.location.pathname);
+          // Clear any saved project from localStorage since we loaded from URL
+          clearSavedProject();
+        } catch (error: any) {
+          console.error('Failed to load design from URL:', error);
+          alert(error.message || 'Failed to load design. Please try again.');
+        } finally {
+          setLoadingDesign(false);
+        }
+        return;
+      }
+
+      // Priority 2: Restore unsaved project from localStorage (after login)
+      // Only restore if no layers are currently loaded (avoid overwriting existing work)
+      const savedProject = loadProjectFromLocalStorage();
+      if (savedProject && user && layers.length === 0) {
+        setLoadingDesign(true);
+        try {
+          await loadProject(savedProject);
+          setShowNewProjectDialog(false);
+          clearSavedProject(); // Clear after successful restore
+        } catch (error: any) {
+          console.error('Failed to restore saved project:', error);
+          clearSavedProject(); // Clear invalid data
+        } finally {
+          setLoadingDesign(false);
+        }
+      }
+    };
+
+    if (!authLoading) {
+      loadProjectOnMount();
+    }
+  }, [user, authLoading, loadProject, setDesignId]);
 
   // Keyboard shortcuts
   useEffect(() => {

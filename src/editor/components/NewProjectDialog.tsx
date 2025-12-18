@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useEditorStore } from '../state/useEditorStore';
 import { carModels } from '../../data/carModels';
 import { getVehicleImageUrl } from '../../utils/assets';
+import { clearSavedProject } from '../../utils/localStorageProject';
 
 interface NewProjectDialogProps {
   isOpen: boolean;
@@ -44,6 +45,9 @@ export const NewProjectDialog = ({ isOpen, onClose }: NewProjectDialogProps) => 
 
   const handleCreate = () => {
     if (!selectedModelId) return;
+    
+    // Clear any saved project from localStorage
+    clearSavedProject();
     
     // Reset project (clears all layers and history)
     resetProject();
