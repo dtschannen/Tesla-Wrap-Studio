@@ -442,6 +442,11 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
       const newWidth = Math.abs(originalWidth * (node.scaleX() / originalScaleX));
       const newHeight = Math.abs(originalHeight * (node.scaleY() / originalScaleY));
       
+      // Reset node scale to 1 IMMEDIATELY to prevent visual jump
+      // This must happen before React re-renders with new dimensions
+      node.scaleX(1);
+      node.scaleY(1);
+      
       updateLayer(layerId, {
         x: finalX,
         y: finalY,
