@@ -3,9 +3,10 @@ import { createPortal } from 'react-dom'
 import { useEditorStore } from '../state/useEditorStore'
 import { exportPngAsDataUrl } from '../../utils/publish'
 import { saveProjectToSupabase } from '../../utils/supabaseProjects'
-import { X, Loader2, Check, Globe, Lock } from 'lucide-react'
+import { X, Loader2, Check, Globe, Lock, Mail } from 'lucide-react'
 import type { Stage } from 'konva/lib/Stage'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../contexts/AuthContext'
 
 interface SaveDialogProps {
   isOpen: boolean
@@ -16,6 +17,7 @@ interface SaveDialogProps {
 
 export function SaveDialog({ isOpen, onClose, onSuccess, stageRef }: SaveDialogProps) {
   const { projectName, setProjectName, getSerializedState, designId, setDesignId, markAsSaved } = useEditorStore()
+  const { user, resendConfirmationEmail } = useAuth()
   const [editingName, setEditingName] = useState(projectName)
   const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -24,6 +26,8 @@ export function SaveDialog({ isOpen, onClose, onSuccess, stageRef }: SaveDialogP
   const [description, setDescription] = useState('')
   const [visibility, setVisibility] = useState<'public' | 'private'>('private')
   const [loadingMeta, setLoadingMeta] = useState(false)
+  const [resendingEmail, setResendingEmail] = useState(false)
+  const [emailResent, setEmailResent] = useState(false)
 
   // Generate preview when dialog opens
   useEffect(() => {
@@ -67,11 +71,35 @@ export function SaveDialog({ isOpen, onClose, onSuccess, stageRef }: SaveDialogP
     }
   }, [isOpen, projectName, stageRef, designId])
 
+  const handleResendConfirmation = async () => {
+    if (!user?.email) return
+    
+    setResendingEmail(true)
+    setError(null)
+    try {
+      const result = await resendConfirmationEmail(user.email)
+      if (result.error) {
+        setError(result.error.message || 'Failed to resend confirmation email')
+      } else {
+        setEmailResent(true)
+        setTimeout(() => setEmailResent(false), 5000)
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to resend confirmation email')
+    } finally {
+      setResendingEmail(false)
+    }
+  }
+
   const handleSave = async () => {
     if (!stageRef.current) {
       setError('Canvas not available')
       return
     }
+
+    // Note: We allow saving even if email is not confirmed
+    // The user is authenticated and can save designs
+    // They'll just need to confirm email later to make designs public
 
     setSaving(true)
     setError(null)
@@ -97,13 +125,16 @@ export function SaveDialog({ isOpen, onClose, onSuccess, stageRef }: SaveDialogP
       }
 
       // Save to Supabase
+      // If email is not confirmed, force private visibility
+      const finalVisibility = (user && !user.email_confirmed_at) ? 'private' : visibility
+      
       const savedDesign = await saveProjectToSupabase(
         project,
         preview,
         designId || undefined,
         {
           description: description.trim() || null,
-          visibility,
+          visibility: finalVisibility,
         }
       )
 
@@ -191,35 +222,67 @@ export function SaveDialog({ isOpen, onClose, onSuccess, stageRef }: SaveDialogP
           {/* Visibility */}
           <div>
             <label className="block text-sm font-medium text-white/70 mb-2">Visibility</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setVisibility('public')}
-                disabled={saving || success || loadingMeta}
-                className={`w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors flex items-center gap-2 justify-center ${
-                  visibility === 'public'
-                    ? 'border-tesla-red bg-tesla-red/10 text-white'
-                    : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:text-white'
-                }`}
-              >
-                <Globe className="w-4 h-4" />
-                Public
-              </button>
-              <button
-                type="button"
-                onClick={() => setVisibility('private')}
-                disabled={saving || success || loadingMeta}
-                className={`w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors flex items-center gap-2 justify-center ${
-                  visibility === 'private'
-                    ? 'border-tesla-red bg-tesla-red/10 text-white'
-                    : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:text-white'
-                }`}
-              >
-                <Lock className="w-4 h-4" />
-                Private
-              </button>
-            </div>
+            {user && !user.email_confirmed_at ? (
+              <div className="p-3 rounded-xl border border-blue-500/20 bg-blue-500/5">
+                <div className="flex items-center gap-2 text-blue-400 text-sm">
+                  <Lock className="w-4 h-4" />
+                  <span>Private (confirm email to make designs public)</span>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setVisibility('public')}
+                  disabled={saving || success || loadingMeta}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors flex items-center gap-2 justify-center ${
+                    visibility === 'public'
+                      ? 'border-tesla-red bg-tesla-red/10 text-white'
+                      : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:text-white'
+                  }`}
+                >
+                  <Globe className="w-4 h-4" />
+                  Public
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVisibility('private')}
+                  disabled={saving || success || loadingMeta}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors flex items-center gap-2 justify-center ${
+                    visibility === 'private'
+                      ? 'border-tesla-red bg-tesla-red/10 text-white'
+                      : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:text-white'
+                  }`}
+                >
+                  <Lock className="w-4 h-4" />
+                  Private
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Email Confirmation Info (Non-blocking) */}
+          {user && !user.email_confirmed_at && (
+            <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+              <div className="flex items-start gap-3">
+                <Mail className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-2">
+                  <p className="text-blue-400 font-medium text-sm">Confirm Your Email</p>
+                  <p className="text-blue-300/80 text-sm">
+                    Your design will be saved, but we recommend confirming your email address. 
+                    Check your inbox for the confirmation link to unlock all features.
+                  </p>
+                  <button
+                    onClick={handleResendConfirmation}
+                    disabled={resendingEmail || emailResent}
+                    className="text-sm text-blue-400 hover:text-blue-300 underline disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {resendingEmail ? 'Sending...' : emailResent ? 'Email sent! Check your inbox' : 'Resend confirmation email'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Status Messages */}
           {error && (
@@ -270,3 +333,4 @@ export function SaveDialog({ isOpen, onClose, onSuccess, stageRef }: SaveDialogP
     document.body
   )
 }
+

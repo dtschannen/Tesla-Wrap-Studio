@@ -32,8 +32,14 @@ export const saveProjectToSupabase = async (
     throw new Error('Supabase is not configured');
   }
 
-  // Check authentication
-  const { data: { session } } = await supabase.auth.getSession();
+  // Check authentication (with fallback refresh)
+  let { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    const refreshResult = await supabase.auth.refreshSession();
+    if (!refreshResult.error && refreshResult.data.session) {
+      session = refreshResult.data.session;
+    }
+  }
   if (!session) {
     throw new Error('You must be logged in to save projects');
   }
@@ -160,8 +166,14 @@ export const loadProjectFromSupabase = async (designId: string): Promise<Project
     throw new Error('Supabase is not configured');
   }
 
-  // Check authentication
-  const { data: { session } } = await supabase.auth.getSession();
+  // Check authentication (with fallback refresh)
+  let { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    const refreshResult = await supabase.auth.refreshSession();
+    if (!refreshResult.error && refreshResult.data.session) {
+      session = refreshResult.data.session;
+    }
+  }
   if (!session) {
     throw new Error('You must be logged in to load projects');
   }

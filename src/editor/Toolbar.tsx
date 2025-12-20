@@ -171,14 +171,6 @@ export const Toolbar = ({ stageRef, onOpen3DPreview }: ToolbarProps) => {
     setPendingAction(null);
   };
 
-  const handleOpenLocalFileClick = () => {
-    setIsOpenProjectDialogOpen(false);
-    // Small delay to ensure dialog closes first
-    setTimeout(() => {
-      projectFileInputRef.current?.click();
-    }, 100);
-  };
-
   // Handle Save Project
   const handleSaveProject = () => {
     // Check if user is authenticated
@@ -328,6 +320,8 @@ export const Toolbar = ({ stageRef, onOpen3DPreview }: ToolbarProps) => {
             accept="image/*"
             onChange={handleImageFileChange}
             className="hidden"
+            aria-label="Upload image file"
+            title="Upload image file"
           />
           <input
             ref={projectFileInputRef}
@@ -335,6 +329,8 @@ export const Toolbar = ({ stageRef, onOpen3DPreview }: ToolbarProps) => {
             accept={getProjectFileAccept()}
             onChange={handleProjectFileChange}
             className="hidden"
+            aria-label="Upload project file"
+            title="Upload project file"
           />
         </div>
 
@@ -374,6 +370,8 @@ export const Toolbar = ({ stageRef, onOpen3DPreview }: ToolbarProps) => {
               onKeyDown={handleProjectNameKeyDown}
               className="px-2 py-0.5 text-xs sm:text-sm font-medium text-tesla-light bg-tesla-black/80 border border-tesla-red/50 rounded outline-none focus:ring-1 focus:ring-tesla-red/50 max-w-[120px] sm:max-w-[200px]"
               autoFocus
+              title="Project name"
+              placeholder="Project name"
             />
           ) : (
             <span 
@@ -493,11 +491,13 @@ export const Toolbar = ({ stageRef, onOpen3DPreview }: ToolbarProps) => {
         onClose={() => setIsInfoDialogOpen(false)}
       />
 
-      {/* Publish Dialog */}
+      {/* Open Project Dialog */}
       <OpenProjectDialog
         isOpen={isOpenProjectDialogOpen}
         onClose={() => setIsOpenProjectDialogOpen(false)}
-        onProjectLoaded={handleOpenLocalFileClick}
+        onProjectLoaded={() => {
+          // Project loaded successfully, dialog will close itself
+        }}
       />
 
       {/* Feature Development Dialog */}

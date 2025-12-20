@@ -35,3 +35,4 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     return null
   }
 }
+

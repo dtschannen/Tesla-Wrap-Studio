@@ -11,6 +11,7 @@ export const supabase = supabaseUrl && supabaseAnonKey
   ? createBrowserClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         getAll() {
+          if (!document.cookie) return []
           return document.cookie.split('; ').map(cookie => {
             const [name, ...rest] = cookie.split('=')
             return { name, value: rest.join('=') }
@@ -19,12 +20,15 @@ export const supabase = supabaseUrl && supabaseAnonKey
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             // Set cookie with shared domain for cross-subdomain access
+            const host = window.location.hostname || ''
+            const isProd = host.endsWith('tesla-wrap.com')
+
             const cookieOptions = {
               ...options,
-              domain: '.tesla-wrap.com',
+              domain: isProd ? '.tesla-wrap.com' : undefined,
               path: '/',
-              sameSite: 'lax' as const,
-              secure: window.location.protocol === 'https:',
+              sameSite: isProd ? ('lax' as const) : ('lax' as const),
+              secure: isProd ? true : window.location.protocol === 'https:',
             }
             
             let cookieString = `${name}=${value}`

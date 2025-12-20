@@ -15,7 +15,7 @@ interface OpenProjectDialogProps {
 
 export function OpenProjectDialog({ isOpen, onClose, onProjectLoaded }: OpenProjectDialogProps) {
   const { user } = useAuth();
-  const { loadProject, setDesignId, isDirty } = useEditorStore();
+  const { loadProject, setDesignId } = useEditorStore();
   const [designs, setDesigns] = useState<SavedDesign[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,13 +49,8 @@ export function OpenProjectDialog({ isOpen, onClose, onProjectLoaded }: OpenProj
   };
 
   const handleOpenDesign = async (design: SavedDesign) => {
-    // Check for unsaved changes
-    if (isDirty) {
-      setPendingDesignId(design.id);
-      setShowUnsavedChangesDialog(true);
-      return;
-    }
-
+    // No need to check for unsaved changes here - already checked when opening the dialog
+    // Just load the design directly
     await loadDesign(design.id);
   };
 
@@ -140,6 +135,8 @@ export function OpenProjectDialog({ isOpen, onClose, onProjectLoaded }: OpenProj
           <button
             onClick={onClose}
             className="p-2 hover:bg-tesla-dark rounded transition-colors text-tesla-light hover:text-white"
+            aria-label="Close dialog"
+            title="Close dialog"
           >
             <X className="w-5 h-5" />
           </button>
