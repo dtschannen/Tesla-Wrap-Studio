@@ -18,5 +18,22 @@ export default defineConfig({
     fs: {
       allow: ['..'],
     },
+    // Proxy Replicate API requests to bypass CORS
+    proxy: {
+      '/api/replicate': {
+        target: 'https://api.replicate.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/replicate/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            // Forward the Authorization header
+            const authHeader = req.headers['authorization'];
+            if (authHeader) {
+              proxyReq.setHeader('Authorization', authHeader);
+            }
+          });
+        },
+      },
+    },
   },
 })
