@@ -3,9 +3,7 @@ import { createBrowserClient } from '@supabase/ssr'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase credentials not configured. Publishing to gallery will not work.')
-}
+// Supabase credentials are required for gallery integration
 
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createBrowserClient(supabaseUrl, supabaseAnonKey, {

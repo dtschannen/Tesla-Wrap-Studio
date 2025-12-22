@@ -189,7 +189,6 @@ export const ToolsPanel = ({ openAIDialogOnMount, onAIDialogOpened }: ToolsPanel
       
       if (existingBrushLayer) {
         setSelection(existingBrushLayer.id);
-        console.log('[BRUSH TOOL] Selected existing brush layer:', existingBrushLayer.name);
       } else {
         addLayer({
           type: 'brush',
@@ -204,7 +203,6 @@ export const ToolsPanel = ({ openAIDialogOnMount, onAIDialogOpened }: ToolsPanel
           scaleX: 1,
           scaleY: 1,
         });
-        console.log('[BRUSH TOOL] Created new brush layer');
       }
       return;
     }

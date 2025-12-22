@@ -198,8 +198,6 @@ export const loadProjectFromSupabase = async (designId: string): Promise<Project
     throw new Error('You do not have permission to load this design');
   }
 
-  // Log for debugging
-  console.log('Loading design:', { designId, projectFileUrl: design.project_file_url });
 
   // Download project file from storage
   const { data: fileData, error: fileError } = await supabase.storage

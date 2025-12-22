@@ -169,7 +169,6 @@ export const WrapDesignerPage = () => {
       try {
         const project = getSerializedState();
         saveProjectToLocalStorage(project);
-        console.log('[Auto-save] Project saved to localStorage');
       } catch (error) {
         console.error('[Auto-save] Failed to save project:', error);
       }

@@ -37,7 +37,7 @@ export const loadProjectFromLocalStorage = (): ProjectFile | null => {
     
     // Validate project structure
     if (!project.version || !project.layers || !project.modelId) {
-      console.warn('Invalid project data in localStorage');
+      // Invalid project data in localStorage
       return null;
     }
 

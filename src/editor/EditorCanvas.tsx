@@ -228,17 +228,12 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
     }
   }, [layers.length]);
 
-  // Debug context menu state
+  // Dismiss hint if user right-clicks
   useEffect(() => {
-    if (contextMenu) {
-      console.log('Context menu state:', contextMenu);
-      console.log('Context layer:', contextLayer);
-      // Dismiss hint if user right-clicks
-      if (showRightClickHint) {
-        handleDismissHint();
-      }
+    if (contextMenu && showRightClickHint) {
+      handleDismissHint();
     }
-  }, [contextMenu, contextLayer, showRightClickHint]);
+  }, [contextMenu, showRightClickHint]);
 
   // Close context menu on outside click or ESC
   useEffect(() => {
@@ -248,16 +243,13 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
       const target = e.target as HTMLElement;
       // Don't close if clicking inside the context menu
       if (target.closest('.context-menu-portal')) {
-        console.log('Click inside context menu - not closing');
         return;
       }
-      console.log('Click outside context menu - closing');
       closeLayerContextMenu();
     };
     
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        console.log('ESC pressed - closing context menu');
         closeLayerContextMenu();
       }
     };
@@ -289,17 +281,14 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
       // Cmd+C / Ctrl+C - Copy
       if (isModKey && e.key === 'c' && selectedLayerId) {
         e.preventDefault();
-        console.log('Copy shortcut triggered for layer:', selectedLayerId);
         copyLayer(selectedLayerId);
       }
       
       // Cmd+V / Ctrl+V - Paste
       if (isModKey && e.key === 'v' && clipboardLayer) {
         e.preventDefault();
-        console.log('Paste shortcut triggered');
         const pasted = pasteLayer();
         if (pasted) {
-          console.log('Pasted layer:', pasted.id);
           setSelection(pasted.id);
         }
       }
@@ -307,7 +296,6 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
       // Cmd+D / Ctrl+D - Duplicate
       if (isModKey && e.key === 'd' && selectedLayerId) {
         e.preventDefault();
-        console.log('Duplicate shortcut triggered for layer:', selectedLayerId);
         duplicateLayer(selectedLayerId);
       }
       
@@ -316,7 +304,6 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
         const layer = layers.find((l) => l.id === selectedLayerId);
         if (layer && !layer.locked) {
           e.preventDefault();
-          console.log('Delete key pressed for layer:', selectedLayerId);
           deleteLayer(selectedLayerId);
         }
       }
@@ -355,7 +342,6 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
 
   const handleStageContextMenu = (e: any) => {
     e.evt.preventDefault();
-    console.log('Stage context menu triggered, selectedLayerId:', selectedLayerId);
     if (selectedLayerId) {
       openLayerContextMenu(selectedLayerId, e.evt.clientX, e.evt.clientY);
     } else {
@@ -370,7 +356,6 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
 
   const handleLayerContextMenu = (e: any, layerId: string) => {
     e.evt.preventDefault();
-    console.log('Layer context menu triggered for:', layerId);
     setSelection(layerId);
     openLayerContextMenu(layerId, e.evt.clientX, e.evt.clientY);
   };
@@ -1073,7 +1058,6 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
               className="w-full text-left px-3 py-2 hover:bg-white/10 flex items-center gap-2 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('Duplicate button clicked for layer:', contextLayer.id);
                 duplicateLayer(contextLayer.id);
                 closeLayerContextMenu();
               }}

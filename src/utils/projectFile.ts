@@ -220,12 +220,6 @@ export const loadProjectFromFile = async (file: File | Blob): Promise<ProjectFil
         throw new Error('Invalid project manifest: missing required fields (version, layers, or modelId).');
       }
       
-      console.log('Loading project from ZIP:', { 
-        name: manifest.name, 
-        version: manifest.version, 
-        layerCount: manifest.layers.length 
-      });
-      
       // Restore images from ZIP
       const restoredLayers = await restoreImages(manifest.layers, zip);
       
@@ -238,12 +232,9 @@ export const loadProjectFromFile = async (file: File | Blob): Promise<ProjectFil
         baseColor: manifest.baseColor,
         layers: restoredLayers,
       };
-    } else {
-      console.warn('ZIP file does not contain manifest.json, trying legacy JSON format');
     }
-  } catch (zipError: any) {
+  } catch {
     // Not a valid ZIP, try legacy JSON format
-    console.log('Not a valid ZIP file, trying legacy JSON format:', zipError.message);
   }
   
   // Fall back to legacy JSON format (v1.0)
@@ -256,12 +247,6 @@ export const loadProjectFromFile = async (file: File | Blob): Promise<ProjectFil
       console.error('Invalid legacy project structure:', project);
       throw new Error('Invalid project file format: missing required fields (version, layers, or modelId).');
     }
-    
-    console.log('Loading project from legacy JSON format:', { 
-      name: project.name, 
-      version: project.version, 
-      layerCount: project.layers.length 
-    });
     
     return project;
   } catch (jsonError: any) {

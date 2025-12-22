@@ -370,7 +370,6 @@ export const AIGeneratorDialog = ({ isOpen, onClose }: AIGeneratorDialogProps) =
           const waitMatch = errorData.detail?.match(/resets in ~(\d+)s/);
           const waitTime = waitMatch ? parseInt(waitMatch[1]) * 1000 : (attempt + 1) * 2000;
           
-          console.log(`Rate limited, waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
           
           // Update state to show waiting
           setState(prev => ({
@@ -484,16 +483,6 @@ export const AIGeneratorDialog = ({ isOpen, onClose }: AIGeneratorDialogProps) =
       const fullPrompt = buildPrompt(prompt.trim(), style);
       const negativePrompt = getNegativePrompt();
       
-      console.log('Generating AI texture design:', {
-        originalPrompt: prompt,
-        fullPrompt,
-        negativePrompt,
-        style,
-        model: 'flux-schnell',
-        numOutputs,
-        hasTemplate: !!templateBase64,
-      });
-
       // Flux Schnell - fast text-to-image generation via Supabase Edge Function
       const { data: predictionData, error: createError } = await supabase.functions.invoke(
         REPLICATE_EDGE_FUNCTION,
@@ -589,7 +578,6 @@ export const AIGeneratorDialog = ({ isOpen, onClose }: AIGeneratorDialogProps) =
           const updatedCredits = await getUserCredits(user.id);
           setCredits(updatedCredits);
         } else {
-          console.warn('Failed to deduct credit, but generation succeeded');
         }
       }
 

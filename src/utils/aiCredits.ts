@@ -69,7 +69,6 @@ export async function deductCredit(userId: string): Promise<boolean> {
     }
 
     if (currentData.ai_texture_credits <= 0) {
-      console.warn('User has no credits available');
       return false;
     }
 
