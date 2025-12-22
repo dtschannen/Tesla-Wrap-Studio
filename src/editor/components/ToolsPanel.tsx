@@ -20,23 +20,37 @@ import { AIGeneratorDialog } from './AIGeneratorDialog';
 import { useAuth } from '../../contexts/AuthContext';
 import { LoginDialog } from '../../components/LoginDialog';
 
-export const ToolsPanel = () => {
+interface ToolsPanelProps {
+  openAIDialogOnMount?: boolean;
+  onAIDialogOpened?: () => void;
+}
+
+export const ToolsPanel = ({ openAIDialogOnMount, onAIDialogOpened }: ToolsPanelProps = {}) => {
   const { activeTool, setActiveTool, addLayer, setSelection } = useEditorStore();
   const { user } = useAuth();
   const [isAIGeneratorDialogOpen, setIsAIGeneratorDialogOpen] = useState(false);
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [showAITooltip, setShowAITooltip] = useState(false);
-  const [pendingAIOpen, setPendingAIOpen] = useState(false);
   const pendingAIOpenRef = useRef(false);
   const aiToolButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Show tooltip every time the editor opens
+  // Show tooltip every time the editor opens (but not if opening AI dialog)
   useEffect(() => {
-    // Small delay to ensure the button is rendered
-    setTimeout(() => {
-      setShowAITooltip(true);
-    }, 500);
-  }, []);
+    if (!openAIDialogOnMount) {
+      // Small delay to ensure the button is rendered
+      setTimeout(() => {
+        setShowAITooltip(true);
+      }, 500);
+    }
+  }, [openAIDialogOnMount]);
+
+  // Open AI dialog on mount if requested (e.g., after Stripe redirect)
+  useEffect(() => {
+    if (openAIDialogOnMount && user) {
+      setIsAIGeneratorDialogOpen(true);
+      onAIDialogOpened?.();
+    }
+  }, [openAIDialogOnMount, user, onAIDialogOpened]);
 
   // Open AI dialog when user logs in and was trying to access it
   useEffect(() => {
@@ -44,7 +58,6 @@ export const ToolsPanel = () => {
       // Wait a moment for auth state to fully propagate and login dialog to close
       const timer = setTimeout(() => {
         pendingAIOpenRef.current = false;
-        setPendingAIOpen(false);
         setIsAIGeneratorDialogOpen(true);
       }, 500);
       return () => clearTimeout(timer);
@@ -154,7 +167,6 @@ export const ToolsPanel = () => {
     if (tool === 'ai-textures') {
       if (!user) {
         pendingAIOpenRef.current = true;
-        setPendingAIOpen(true);
         setIsLoginDialogOpen(true);
         return;
       }
@@ -464,7 +476,6 @@ export const ToolsPanel = () => {
                       handleDismissTooltip();
                       if (!user) {
                         pendingAIOpenRef.current = true;
-                        setPendingAIOpen(true);
                         setIsLoginDialogOpen(true);
                       } else {
                         setIsAIGeneratorDialogOpen(true);
@@ -494,7 +505,6 @@ export const ToolsPanel = () => {
         onClose={() => {
           setIsLoginDialogOpen(false);
           pendingAIOpenRef.current = false;
-          setPendingAIOpen(false);
         }}
         onSuccess={() => {
           // Close login dialog - the useEffect will detect user change and open AI dialog

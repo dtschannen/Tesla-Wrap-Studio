@@ -1,4 +1,59 @@
 import { supabase } from '../lib/supabase';
+import { saveProjectToLocalStorage } from './localStorageProject';
+import type { ProjectFile } from '../editor/state/useEditorStore';
+
+// Session storage key for Stripe return context
+const STRIPE_RETURN_CONTEXT_KEY = 'tesla_wrap_stripe_return_context';
+
+export interface StripeReturnContext {
+  openDialog: 'ai' | null;
+  timestamp: number;
+}
+
+/**
+ * Save context before redirecting to Stripe
+ */
+export function saveStripeReturnContext(context: Omit<StripeReturnContext, 'timestamp'>, project?: ProjectFile): void {
+  try {
+    // Save return context to sessionStorage (survives redirect but not browser close)
+    sessionStorage.setItem(STRIPE_RETURN_CONTEXT_KEY, JSON.stringify({
+      ...context,
+      timestamp: Date.now(),
+    }));
+    
+    // Save project to localStorage if provided
+    if (project) {
+      saveProjectToLocalStorage(project);
+    }
+  } catch (error) {
+    console.error('Failed to save Stripe return context:', error);
+  }
+}
+
+/**
+ * Load and clear Stripe return context
+ */
+export function loadStripeReturnContext(): StripeReturnContext | null {
+  try {
+    const stored = sessionStorage.getItem(STRIPE_RETURN_CONTEXT_KEY);
+    if (!stored) return null;
+    
+    // Clear after reading
+    sessionStorage.removeItem(STRIPE_RETURN_CONTEXT_KEY);
+    
+    const context = JSON.parse(stored) as StripeReturnContext;
+    
+    // Expire context after 30 minutes
+    if (Date.now() - context.timestamp > 30 * 60 * 1000) {
+      return null;
+    }
+    
+    return context;
+  } catch (error) {
+    console.error('Failed to load Stripe return context:', error);
+    return null;
+  }
+}
 
 // Credit packages with Stripe price IDs
 // These should match your Stripe Dashboard product prices
@@ -54,8 +109,8 @@ export async function createCheckoutSession(
         priceId: pkg.priceId,
         credits: pkg.credits,
         packageId: pkg.id,
-        successUrl: `${window.location.origin}/studio?payment=success`,
-        cancelUrl: `${window.location.origin}/studio?payment=cancelled`,
+        successUrl: `${window.location.origin}/?payment=success&openDialog=ai`,
+        cancelUrl: `${window.location.origin}/?payment=cancelled`,
       },
     });
 

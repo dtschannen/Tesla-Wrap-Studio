@@ -4,7 +4,8 @@ import { loadImage } from '../../utils/image';
 import { useAuth } from '../../contexts/AuthContext';
 import { getUserCredits, deductCredit } from '../../utils/aiCredits';
 import type { UserCredits } from '../../utils/aiCredits';
-import { createCheckoutSession, CREDIT_PACKAGES } from '../../utils/stripe';
+import { createCheckoutSession, CREDIT_PACKAGES, saveStripeReturnContext } from '../../utils/stripe';
+import { saveProjectToLocalStorage, saveUIState } from '../../utils/localStorageProject';
 
 // Available AI models for generation
 // All models are text-to-image - mask is applied programmatically after generation
@@ -204,7 +205,7 @@ export const AIGeneratorDialog = ({ isOpen, onClose }: AIGeneratorDialogProps) =
   });
 
   const { user } = useAuth();
-  const { addLayer, templateImage } = useEditorStore();
+  const { addLayer, templateImage, getSerializedState } = useEditorStore();
   const styleDropdownRef = useRef<HTMLDivElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -678,6 +679,12 @@ export const AIGeneratorDialog = ({ isOpen, onClose }: AIGeneratorDialogProps) =
       }
 
       if (url) {
+        // Save context and project before redirecting to Stripe
+        const project = getSerializedState();
+        saveProjectToLocalStorage(project);
+        saveUIState({ openDialog: 'ai', zoom: 1, autoFit: true });
+        saveStripeReturnContext({ openDialog: 'ai' }, project);
+        
         // Redirect to Stripe Checkout
         window.location.href = url;
       } else {

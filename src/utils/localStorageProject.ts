@@ -1,6 +1,17 @@
 import type { ProjectFile } from '../editor/state/useEditorStore';
 
 const STORAGE_KEY = 'tesla_wrap_unsaved_project';
+const UI_STATE_KEY = 'tesla_wrap_ui_state';
+
+/**
+ * UI state interface for persisting editor UI state
+ */
+export interface EditorUIState {
+  openDialog: 'ai' | 'newProject' | '3dPreview' | null;
+  zoom: number;
+  autoFit: boolean;
+  timestamp: number;
+}
 
 /**
  * Save project to localStorage (for preserving unsaved work during login)
@@ -48,4 +59,60 @@ export const clearSavedProject = (): void => {
   }
 };
 
+/**
+ * Save UI state to localStorage
+ */
+export const saveUIState = (state: Omit<EditorUIState, 'timestamp'>): void => {
+  try {
+    const stateWithTimestamp: EditorUIState = {
+      ...state,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(UI_STATE_KEY, JSON.stringify(stateWithTimestamp));
+  } catch (error) {
+    console.error('Failed to save UI state to localStorage:', error);
+  }
+};
+
+/**
+ * Load UI state from localStorage
+ */
+export const loadUIState = (): EditorUIState | null => {
+  try {
+    const stored = localStorage.getItem(UI_STATE_KEY);
+    if (!stored) return null;
+
+    const state = JSON.parse(stored) as EditorUIState;
+    
+    // Expire UI state after 30 minutes
+    if (Date.now() - state.timestamp > 30 * 60 * 1000) {
+      clearUIState();
+      return null;
+    }
+
+    return state;
+  } catch (error) {
+    console.error('Failed to load UI state from localStorage:', error);
+    return null;
+  }
+};
+
+/**
+ * Clear UI state from localStorage
+ */
+export const clearUIState = (): void => {
+  try {
+    localStorage.removeItem(UI_STATE_KEY);
+  } catch (error) {
+    console.error('Failed to clear UI state from localStorage:', error);
+  }
+};
+
+/**
+ * Clear all saved state (project + UI)
+ */
+export const clearAllSavedState = (): void => {
+  clearSavedProject();
+  clearUIState();
+};
 
