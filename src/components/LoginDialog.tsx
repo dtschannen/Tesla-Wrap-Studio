@@ -159,6 +159,9 @@ export function LoginDialog({ isOpen, onClose, onSuccess }: LoginDialogProps) {
                       Click the confirmation link in the email to activate your account. 
                       Once confirmed, click Continue to proceed.
                     </p>
+                    <p className="text-white/50 text-xs">
+                      Don&apos;t forget to check your spam/junk folder if you don&apos;t see it.
+                    </p>
                   </div>
                 </div>
               </div>
