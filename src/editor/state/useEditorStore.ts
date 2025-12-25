@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import type { Layer, EditorState, ToolType, BrushSettings, BrushStroke } from './editorTypes';
-import { carModels } from '../../data/carModels';
+import { defaultModel } from '../../data/carModels';
 
 interface HistorySnapshot {
   layers: Layer[];
@@ -135,7 +135,7 @@ export const useEditorStore = create<EditorStore>((set, get) => {
     layers: [],
     selectedLayerId: null,
     baseColor: '#ffffff',
-    currentModelId: carModels[0].id,
+    currentModelId: defaultModel.id,
     templateDimensions: null,
     templateImage: null,
     activeTool: 'select' as ToolType,

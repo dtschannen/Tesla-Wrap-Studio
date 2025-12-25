@@ -64,5 +64,5 @@ export const carModels: CarModel[] = [
   },
 ];
 
-export const defaultModel = carModels[0];
+export const defaultModel = carModels[4];
 

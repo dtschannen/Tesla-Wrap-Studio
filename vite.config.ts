@@ -6,8 +6,8 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [react()],
   // Configure asset handling for src/assets/wraps
-  publicDir: false, // We're not using public dir for these assets
-  assetsInclude: ['**/*.gltf', '**/*.bin'], // Include GLTF and binary files as assets
+  publicDir: 'public', // Enable public directory for Godot files
+  assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.bin'], // Include GLTF, GLB and binary files as assets
   resolve: {
     alias: {
       '@assets': resolve(__dirname, './src/assets'),
@@ -17,6 +17,25 @@ export default defineConfig({
   server: {
     fs: {
       allow: ['..'],
+    },
+    // Configure MIME types for Godot files
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+    },
+  },
+  // Configure build to handle Godot files
+  build: {
+    rollupOptions: {
+      output: {
+        // Ensure Godot files are copied as-is
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.endsWith('.wasm') || assetInfo.name?.endsWith('.pck')) {
+            return 'godot/[name][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        },
+      },
     },
   },
 })

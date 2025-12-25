@@ -39,7 +39,7 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
         // If a non-brush layer is selected, clear the tracking
         brushLayerSelectedWhileActive.current = null;
       }
-    } else if (activeTool !== 'brush') {
+    } else {
       // Reset when brush tool is not active
       brushLayerSelectedWhileActive.current = null;
     }
@@ -127,7 +127,7 @@ export const BrushTool = ({ stageRef }: BrushToolProps) => {
 
     // When brush tool becomes active, check if we should clear selection or create a new layer
     const state = useEditorStore.getState();
-    const { selectedLayerId: currentSelectedId, layers, setSelection } = state;
+    const { selectedLayerId: currentSelectedId, layers } = state;
     
     // If we just switched TO the brush tool (from a different tool)
     const justSwitchedToBrush = previousTool.current !== null && previousTool.current !== 'brush';

@@ -5,7 +5,7 @@ import { Toolbar } from './Toolbar';
 import { ToolsPanel } from './components/ToolsPanel';
 import { LayersPanel } from './LayersPanel';
 import { PropertiesPanel } from './PropertiesPanel';
-import { ThreeViewer } from '../viewer/ThreeViewer';
+import { GodotViewer } from '../viewer/GodotViewer';
 import { NewProjectDialog } from './components/NewProjectDialog';
 import { UnsavedChangesDialog } from './components/UnsavedChangesDialog';
 import { useEditorStore } from './state/useEditorStore';
@@ -265,7 +265,7 @@ export const WrapDesignerPage = () => {
         </div>
         <PropertiesPanel />
       </div>
-      <ThreeViewer
+      <GodotViewer
         isOpen={show3DPreview}
         onClose={() => setShow3DPreview(false)}
         stageRef={stageRef}
