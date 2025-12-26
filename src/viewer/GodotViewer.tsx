@@ -341,13 +341,7 @@ export const GodotViewer = ({ isOpen, onClose, stageRef }: GodotViewerProps) => 
   useEffect(() => {
     if (!godotReady) return;
     
-    // Skip initial render
-    if (prevSignatureRef.current === null) {
-      prevSignatureRef.current = debouncedSignature;
-      return;
-    }
-    
-    // Only sync if signature actually changed
+    // Sync texture whenever signature changes (including initial load after restore)
     if (prevSignatureRef.current !== debouncedSignature) {
       prevSignatureRef.current = debouncedSignature;
       // Small delay to ensure canvas is fully rendered
@@ -376,8 +370,7 @@ export const GodotViewer = ({ isOpen, onClose, stageRef }: GodotViewerProps) => 
     });
   }, [currentModel.id, godotReady, sendToGodot]);
 
-  // When reopening, ensure model is loaded and trigger resize
-  // Texture sync happens automatically in background, so we just need to resize
+  // When reopening, ensure model is loaded, trigger resize, and sync texture
   useEffect(() => {
     if (isOpen && godotReady && iframeEverLoaded) {
       if (lastLoadedModelRef.current !== currentModel.id) {
@@ -388,12 +381,18 @@ export const GodotViewer = ({ isOpen, onClose, stageRef }: GodotViewerProps) => 
           modelId: currentModel.id,
         });
       } else {
-        // Just trigger resize - texture is already synced in background
+        // Trigger resize
         triggerIframeResize();
         setTimeout(triggerIframeResize, 100);
+        
+        // Always sync texture when viewer opens to handle restored projects
+        // This ensures texture is up-to-date even if initial sync was missed
+        setTimeout(() => {
+          sendTextureToGodot();
+        }, 150);
       }
     }
-  }, [isOpen, godotReady, iframeEverLoaded, currentModel.id, triggerIframeResize, sendToGodot]);
+  }, [isOpen, godotReady, iframeEverLoaded, currentModel.id, triggerIframeResize, sendToGodot, sendTextureToGodot]);
 
   // Handle window resize while viewer is open
   useEffect(() => {
