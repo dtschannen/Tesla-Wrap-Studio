@@ -149,10 +149,12 @@ canvas {
 /* Mobile usability tweaks (landscape-first)                                   */
 /* -------------------------------------------------------------------------- */
 
-/* Keep the canvas zoom controls above the mobile bottom bar */
+/* Put zoom controls at the top on mobile (so they don't fight the bottom bar) */
 @media (max-width: 1023px) {
   #canvas-container .zoom-controls {
-    bottom: 4.25rem;
+    top: 0.75rem;
+    right: 0.75rem;
+    bottom: auto;
   }
 }
 

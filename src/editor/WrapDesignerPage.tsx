@@ -425,11 +425,14 @@ export const WrapDesignerPage = () => {
 
         {/* Bottom control bar (kept small to preserve canvas space) */}
         {!isPortraitSmallScreen && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-[300]">
-            <div className="panel rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl">
+          <div
+            className="absolute left-1/2 -translate-x-1/2 z-[300]"
+            style={{ bottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
+          >
+            <div className="panel rounded-full px-1.5 py-1 flex items-center gap-1 shadow-2xl">
               <button
                 onClick={() => setMobilePanel((p) => (p === 'tools' ? null : 'tools'))}
-                className={`px-3 py-2 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${
+                className={`px-2.5 py-2 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${
                   mobilePanel === 'tools'
                     ? 'bg-tesla-red text-white'
                     : 'bg-tesla-black/50 text-tesla-gray hover:text-tesla-light hover:bg-tesla-dark/40'
@@ -438,11 +441,11 @@ export const WrapDesignerPage = () => {
                 title="Tools"
               >
                 <Brush className="w-4 h-4" />
-                Tools
+                <span className="hidden sm:inline">Tools</span>
               </button>
               <button
                 onClick={() => setMobilePanel((p) => (p === 'layers' ? null : 'layers'))}
-                className={`px-3 py-2 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${
+                className={`px-2.5 py-2 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${
                   mobilePanel === 'layers'
                     ? 'bg-tesla-red text-white'
                     : 'bg-tesla-black/50 text-tesla-gray hover:text-tesla-light hover:bg-tesla-dark/40'
@@ -451,11 +454,11 @@ export const WrapDesignerPage = () => {
                 title="Layers"
               >
                 <Layers className="w-4 h-4" />
-                Layers
+                <span className="hidden sm:inline">Layers</span>
               </button>
               <button
                 onClick={() => setMobilePanel((p) => (p === 'properties' ? null : 'properties'))}
-                className={`px-3 py-2 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${
+                className={`px-2.5 py-2 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${
                   mobilePanel === 'properties'
                     ? 'bg-tesla-red text-white'
                     : 'bg-tesla-black/50 text-tesla-gray hover:text-tesla-light hover:bg-tesla-dark/40'
@@ -464,7 +467,7 @@ export const WrapDesignerPage = () => {
                 title="Properties"
               >
                 <SlidersHorizontal className="w-4 h-4" />
-                Props
+                <span className="hidden sm:inline">Props</span>
               </button>
             </div>
           </div>
