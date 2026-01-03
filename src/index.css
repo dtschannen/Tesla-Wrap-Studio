@@ -145,6 +145,24 @@ canvas {
   aspect-ratio: 1 / 1 !important;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Mobile usability tweaks (landscape-first)                                   */
+/* -------------------------------------------------------------------------- */
+
+/* Keep the canvas zoom controls above the mobile bottom bar */
+@media (max-width: 1023px) {
+  #canvas-container .zoom-controls {
+    bottom: 4.25rem;
+  }
+}
+
+/* Right-click hints aren't actionable on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  #canvas-container .right-click-hint {
+    display: none;
+  }
+}
+
 /* Clean circle-only color input (remove inner square) */
 .color-circle {
   appearance: none;

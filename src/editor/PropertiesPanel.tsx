@@ -498,7 +498,7 @@ const TransformSection = ({ x, y, rotation, scaleX, scaleY, opacity, onUpdate }:
 // MAIN PROPERTIES PANEL
 // ============================================================================
 
-export const PropertiesPanel = () => {
+export const PropertiesPanel = ({ className = '' }: { className?: string }) => {
   const { layers, selectedLayerId, updateLayer, activeTool } = useEditorStore();
   
   useEffect(() => {
@@ -512,7 +512,7 @@ export const PropertiesPanel = () => {
   // No layer selected state
   if (!selectedLayer) {
     return (
-      <div className="h-full panel rounded-xl flex flex-col w-80 overflow-hidden shadow-lg">
+      <div className={`h-full panel rounded-xl flex flex-col w-80 overflow-hidden shadow-lg ${className}`}>
         <div className="p-4 border-b border-tesla-dark/30">
           <h2 className="text-lg font-semibold text-tesla-light flex items-center gap-2">
             <Layers className="w-5 h-5 text-tesla-gray" />
@@ -558,7 +558,7 @@ export const PropertiesPanel = () => {
   };
 
   return (
-    <div className="h-full panel rounded-xl flex flex-col w-80 overflow-hidden shadow-lg">
+    <div className={`h-full panel rounded-xl flex flex-col w-80 overflow-hidden shadow-lg ${className}`}>
       {/* Header */}
       <div className="p-4 border-b border-tesla-dark/30">
         <div className="flex items-center gap-3">

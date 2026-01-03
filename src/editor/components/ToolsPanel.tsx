@@ -24,9 +24,10 @@ import Tooltip from '@mui/material/Tooltip';
 interface ToolsPanelProps {
   openAIDialogOnMount?: boolean;
   onAIDialogOpened?: () => void;
+  className?: string;
 }
 
-export const ToolsPanel = ({ openAIDialogOnMount, onAIDialogOpened }: ToolsPanelProps = {}) => {
+export const ToolsPanel = ({ openAIDialogOnMount, onAIDialogOpened, className = '' }: ToolsPanelProps = {}) => {
   const { activeTool, setActiveTool, addLayer, setSelection } = useEditorStore();
   const { user } = useAuth();
   const [isAIGeneratorDialogOpen, setIsAIGeneratorDialogOpen] = useState(false);
@@ -406,7 +407,7 @@ export const ToolsPanel = ({ openAIDialogOnMount, onAIDialogOpened }: ToolsPanel
 
   return (
     <>
-      <div className="h-full panel rounded-xl flex flex-col w-16 overflow-hidden shadow-lg">
+      <div className={`h-full panel rounded-xl flex flex-col w-16 overflow-hidden shadow-lg ${className}`}>
         {/* Tool Buttons */}
         <div className="flex-1 p-2 space-y-1.5 overflow-y-auto overflow-x-hidden scrollbar-thin">
           {tools.map((tool) => {
