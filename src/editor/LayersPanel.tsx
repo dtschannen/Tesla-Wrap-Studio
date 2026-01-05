@@ -184,7 +184,7 @@ const LayerItem = ({ layer }: LayerItemProps) => {
   );
 };
 
-export const LayersPanel = () => {
+export const LayersPanel = ({ className = '' }: { className?: string }) => {
   const { layers, reorderLayers, currentModelId, baseColor, setBaseColor, setSelection } = useEditorStore();
   const currentModel = carModels.find((m) => m.id === currentModelId) || carModels[0];
 
@@ -212,7 +212,7 @@ export const LayersPanel = () => {
   };
 
   return (
-    <div className="h-full panel rounded-xl flex flex-col w-64 overflow-hidden shadow-lg">
+    <div className={`h-full panel rounded-xl flex flex-col w-64 overflow-hidden shadow-lg ${className}`}>
       <div className="p-4 border-b border-tesla-dark/30">
         <h2 className="text-lg font-semibold text-tesla-light flex items-center gap-2">
           <svg className="w-5 h-5 text-tesla-gray" fill="none" stroke="currentColor" viewBox="0 0 24 24">

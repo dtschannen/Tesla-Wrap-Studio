@@ -851,7 +851,7 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
 
       {/* Right-Click Hint Tooltip - Bottom Left */}
       {showRightClickHint && (
-        <div className="absolute bottom-3 left-3 z-50">
+        <div className="absolute bottom-3 left-3 z-50 right-click-hint">
           <div className="relative bg-[#1c1c1e]/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-2xl max-w-sm">
             {/* Close button */}
             <button
@@ -881,7 +881,7 @@ export const EditorCanvas = forwardRef<StageType | null, EditorCanvasProps>(({ o
       )}
 
       {/* Floating Zoom Controls */}
-      <div className="absolute bottom-3 right-3 bg-tesla-black/80 backdrop-blur-xl border border-tesla-dark/40 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-xl">
+      <div className="absolute bottom-3 right-3 bg-tesla-black/80 backdrop-blur-xl border border-tesla-dark/40 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-xl zoom-controls">
         <button
           onClick={calculateMaxFitZoom}
           className="p-1 rounded-lg text-tesla-gray hover:text-tesla-light hover:bg-tesla-dark/30 transition-colors"

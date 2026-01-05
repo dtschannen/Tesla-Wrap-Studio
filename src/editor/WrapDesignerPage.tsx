@@ -11,6 +11,7 @@ import { UnsavedChangesDialog } from './components/UnsavedChangesDialog';
 import { useEditorStore } from './state/useEditorStore';
 import { useAuth } from '../contexts/AuthContext';
 import { loadProjectFromSupabase } from '../utils/supabaseProjects';
+import { Brush, Layers, SlidersHorizontal, X } from 'lucide-react';
 import { 
   loadProjectFromLocalStorage, 
   clearSavedProject, 
@@ -36,9 +37,32 @@ export const WrapDesignerPage = () => {
   const [openAIDialogOnMount, setOpenAIDialogOnMount] = useState(false);
   const [isRestoring, setIsRestoring] = useState(true); // Loading state for initial restore
   const hasRestoredRef = useRef(false); // Prevent double restore
+  const [mobilePanel, setMobilePanel] = useState<'tools' | 'layers' | 'properties' | null>(null);
+  const [isPortraitSmallScreen, setIsPortraitSmallScreen] = useState(false);
 
   // Use auto-fit zoom when autoFit is true, otherwise use manual zoom
   const currentZoom = autoFit ? autoFitZoom : manualZoom;
+
+  // Mobile orientation guard (we support mobile in landscape; portrait gets a rotate hint)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px) and (orientation: portrait)');
+    const update = () => setIsPortraitSmallScreen(mq.matches);
+    update();
+    // Safari < 14 uses addListener/removeListener
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', update);
+      return () => mq.removeEventListener('change', update);
+    }
+    mq.addListener(update);
+    return () => mq.removeListener(update);
+  }, []);
+
+  // If we rotate into portrait, close drawers so the rotate overlay is unobstructed.
+  useEffect(() => {
+    if (isPortraitSmallScreen) {
+      setMobilePanel(null);
+    }
+  }, [isPortraitSmallScreen]);
 
   // Unified restore logic - runs once on mount
   useEffect(() => {
@@ -346,15 +370,16 @@ export const WrapDesignerPage = () => {
           onOpen3DPreview={() => setShow3DPreview(true)}
         />
       </div>
-      <div className="flex-1 flex overflow-hidden gap-1 p-1 relative z-0">
-        <ToolsPanel 
+      {/* Desktop / large tablets: 4-column layout */}
+      <div className="flex-1 hidden lg:flex overflow-hidden gap-1 p-1 relative z-0">
+        <ToolsPanel
           openAIDialogOnMount={openAIDialogOnMount}
           onAIDialogOpened={() => setOpenAIDialogOnMount(false)}
         />
         <LayersPanel />
         <div ref={canvasContainerRef} className="flex-1 overflow-hidden relative z-0">
-          <EditorCanvas 
-            ref={stageRef} 
+          <EditorCanvas
+            ref={stageRef}
             zoom={currentZoom}
             onZoomChange={(newZoom) => {
               if (autoFit) {
@@ -373,6 +398,131 @@ export const WrapDesignerPage = () => {
           />
         </div>
         <PropertiesPanel />
+      </div>
+
+      {/* Mobile / small tablets: canvas-first layout + drawers (landscape-friendly) */}
+      <div className="flex-1 lg:hidden overflow-hidden p-1 relative z-0">
+        <div ref={canvasContainerRef} className="h-full w-full overflow-hidden relative z-0">
+          <EditorCanvas
+            ref={stageRef}
+            zoom={currentZoom}
+            onZoomChange={(newZoom) => {
+              if (autoFit) {
+                setAutoFitZoom(newZoom);
+              } else {
+                setManualZoom(newZoom);
+              }
+            }}
+            autoFit={autoFit}
+            onAutoFitChange={(fit) => {
+              setAutoFit(fit);
+              if (!fit && autoFitZoom) {
+                setManualZoom(autoFitZoom);
+              }
+            }}
+          />
+        </div>
+
+        {/* Bottom control bar (kept small to preserve canvas space) */}
+        {!isPortraitSmallScreen && (
+          <div
+            className="absolute left-1/2 -translate-x-1/2 z-[300]"
+            style={{ bottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
+          >
+            <div className="panel rounded-full px-1.5 py-1 flex items-center gap-1 shadow-2xl">
+              <button
+                onClick={() => setMobilePanel((p) => (p === 'tools' ? null : 'tools'))}
+                className={`px-2.5 py-2 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${
+                  mobilePanel === 'tools'
+                    ? 'bg-tesla-red text-white'
+                    : 'bg-tesla-black/50 text-tesla-gray hover:text-tesla-light hover:bg-tesla-dark/40'
+                }`}
+                aria-label="Open tools"
+                title="Tools"
+              >
+                <Brush className="w-4 h-4" />
+                <span className="hidden sm:inline">Tools</span>
+              </button>
+              <button
+                onClick={() => setMobilePanel((p) => (p === 'layers' ? null : 'layers'))}
+                className={`px-2.5 py-2 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${
+                  mobilePanel === 'layers'
+                    ? 'bg-tesla-red text-white'
+                    : 'bg-tesla-black/50 text-tesla-gray hover:text-tesla-light hover:bg-tesla-dark/40'
+                }`}
+                aria-label="Open layers"
+                title="Layers"
+              >
+                <Layers className="w-4 h-4" />
+                <span className="hidden sm:inline">Layers</span>
+              </button>
+              <button
+                onClick={() => setMobilePanel((p) => (p === 'properties' ? null : 'properties'))}
+                className={`px-2.5 py-2 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${
+                  mobilePanel === 'properties'
+                    ? 'bg-tesla-red text-white'
+                    : 'bg-tesla-black/50 text-tesla-gray hover:text-tesla-light hover:bg-tesla-dark/40'
+                }`}
+                aria-label="Open properties"
+                title="Properties"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                <span className="hidden sm:inline">Props</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Portrait hint overlay (mobile) */}
+        {isPortraitSmallScreen && (
+          <div className="absolute inset-0 z-[400] flex items-center justify-center bg-tesla-black/70 backdrop-blur-sm">
+            <div className="panel rounded-2xl p-5 max-w-[90vw] text-center">
+              <div className="text-tesla-light font-semibold mb-2">Rotate your phone</div>
+              <div className="text-sm text-tesla-gray">
+                Tesla Wrap Studio is optimized for <span className="text-tesla-light">landscape</span> on mobile.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Drawer overlay */}
+        {mobilePanel && !isPortraitSmallScreen && (
+          <div className="fixed inset-0 z-[500]">
+            <button
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setMobilePanel(null)}
+              aria-label="Close panel overlay"
+              title="Close"
+            />
+
+            <div
+              className={`absolute inset-y-0 p-2 w-[min(92vw,24rem)] ${
+                mobilePanel === 'properties' ? 'right-0' : 'left-0'
+              }`}
+            >
+              <div className="h-full relative">
+                <button
+                  onClick={() => setMobilePanel(null)}
+                  className="absolute top-3 right-3 z-[10] p-2 rounded-lg bg-tesla-black/60 hover:bg-tesla-dark/50 text-tesla-gray hover:text-tesla-light border border-tesla-dark/40"
+                  aria-label="Close panel"
+                  title="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                {mobilePanel === 'tools' && (
+                  <ToolsPanel
+                    className="w-full"
+                    openAIDialogOnMount={openAIDialogOnMount}
+                    onAIDialogOpened={() => setOpenAIDialogOnMount(false)}
+                  />
+                )}
+                {mobilePanel === 'layers' && <LayersPanel className="w-full" />}
+                {mobilePanel === 'properties' && <PropertiesPanel className="w-full" />}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <GodotViewer
         isOpen={show3DPreview}
