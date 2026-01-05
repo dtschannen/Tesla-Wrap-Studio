@@ -26,6 +26,9 @@ export const NewProjectDialog = ({ isOpen, onClose }: NewProjectDialogProps) => 
   const [selectedColor, setSelectedColor] = useState('#F5F5F0'); // Pearl White Multi-Coat
   const [customColor, setCustomColor] = useState('#3B82F6');
   const [projectName, setProjectNameLocal] = useState('');
+
+  const selectedColorName =
+    factoryColors.find(c => c.color === selectedColor)?.name || 'Custom Color';
   
   const { setCurrentModelId, setBaseColor, resetProject, setProjectName } = useEditorStore();
 
@@ -72,19 +75,19 @@ export const NewProjectDialog = ({ isOpen, onClose }: NewProjectDialogProps) => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[200] flex items-start justify-center p-4 sm:p-6 overflow-y-auto">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Dialog */}
-      <div className="relative bg-[#1c1c1e] border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+      <div className="relative bg-[#1c1c1e] border border-white/10 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+        <div className="px-4 py-4 sm:px-6 border-b border-white/10 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-white">New Project</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-white">New Project</h2>
             <p className="text-xs text-white/50 mt-0.5">Select a model and base color</p>
           </div>
           <button
@@ -100,7 +103,7 @@ export const NewProjectDialog = ({ isOpen, onClose }: NewProjectDialogProps) => 
         </div>
         
         {/* Content */}
-        <div className="p-6 space-y-5">
+        <div className="flex-1 overflow-y-auto px-4 py-5 sm:p-6 space-y-5 sm:space-y-6">
           {/* Project Name */}
           <div>
             <label className="block text-xs font-medium text-white/60 mb-1.5">Project Name</label>
@@ -116,22 +119,19 @@ export const NewProjectDialog = ({ isOpen, onClose }: NewProjectDialogProps) => 
           {/* Model Selection */}
           <div>
             <label className="block text-xs font-medium text-white/60 mb-2">Tesla Model</label>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {carModels.map((model) => (
                 <button
                   key={model.id}
                   onClick={() => handleSelectModel(model.id)}
-                  className={`group relative rounded-lg overflow-visible transition-all duration-150 focus:outline-none ${
+                  className={`group relative rounded-xl overflow-hidden transition-all duration-150 focus:outline-none text-left h-full ${
                     selectedModelId === model.id
-                      ? 'ring-2 ring-tesla-red'
+                      ? 'ring-2 ring-tesla-red shadow-[0_10px_30px_-10px_rgba(239,68,68,0.45)]'
                       : 'ring-1 ring-white/10 hover:ring-white/30'
                   }`}
+                  title={model.name}
                 >
-                  {/* Custom tooltip */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/90 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                    {model.name}
-                  </div>
-                  <div className="aspect-[4/3] bg-[#2c2c2e] flex items-center justify-center relative overflow-hidden rounded-t-lg">
+                  <div className="aspect-[4/3] bg-[#2c2c2e] flex items-center justify-center relative overflow-hidden">
                     <img
                       src={getVehicleImageUrl(model.folderName)}
                       alt={model.name}
@@ -148,8 +148,11 @@ export const NewProjectDialog = ({ isOpen, onClose }: NewProjectDialogProps) => 
                       </div>
                     )}
                   </div>
-                  <div className="px-1.5 py-1.5 bg-[#252527] rounded-b-lg">
-                    <span className="text-[10px] font-medium text-white/70 truncate block text-center leading-tight">{model.name}</span>
+                  <div className="px-2 py-2 bg-[#252527]">
+                    <span className="text-[11px] sm:text-xs font-medium text-white/80 truncate block leading-tight" aria-hidden>
+                      {model.name}
+                    </span>
+                    <span className="sr-only">Select {model.name}</span>
                   </div>
                 </button>
               ))}
@@ -159,12 +162,12 @@ export const NewProjectDialog = ({ isOpen, onClose }: NewProjectDialogProps) => 
           {/* Color Selection */}
           <div>
             <label className="block text-xs font-medium text-white/60 mb-2">Base Color</label>
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
               {factoryColors.map((c) => (
                 <Tooltip key={c.color} title={c.name} placement="top" arrow>
                   <button
                     onClick={() => handleSelectColor(c.color)}
-                    className={`w-8 h-8 rounded-lg transition-all duration-150 focus:outline-none ${
+                    className={`w-10 h-10 rounded-xl transition-all duration-150 focus:outline-none ${
                       selectedColor === c.color
                         ? 'ring-2 ring-tesla-red ring-offset-2 ring-offset-[#1c1c1e] scale-105'
                         : 'ring-1 ring-white/10 hover:scale-105'
@@ -173,14 +176,14 @@ export const NewProjectDialog = ({ isOpen, onClose }: NewProjectDialogProps) => 
                     aria-label={c.name}
                   >
                     {selectedColor === c.color && (
-                      <svg 
+                      <svg
                         className={`w-4 h-4 mx-auto ${
                           c.color === '#FFFFFF' || c.color === '#F5F5F5' || c.color === '#F5F5F0' || c.color === '#E8E8E8' || c.color === '#A6A6A6'
-                            ? 'text-black/50' 
+                            ? 'text-black/50'
                             : 'text-white/90'
-                        }`} 
-                        fill="none" 
-                        stroke="currentColor" 
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -199,15 +202,15 @@ export const NewProjectDialog = ({ isOpen, onClose }: NewProjectDialogProps) => 
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                     aria-label="Custom color"
                   />
-                  <div 
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 ${
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 ${
                       isCustomColor
                         ? 'ring-2 ring-tesla-red ring-offset-2 ring-offset-[#1c1c1e] scale-105'
                         : 'ring-1 ring-white/10 hover:scale-105'
                     }`}
-                    style={{ 
-                      background: isCustomColor 
-                        ? selectedColor 
+                    style={{
+                      background: isCustomColor
+                        ? selectedColor
                         : 'conic-gradient(from 0deg, red, yellow, lime, aqua, blue, magenta, red)'
                     }}
                   >
@@ -221,22 +224,23 @@ export const NewProjectDialog = ({ isOpen, onClose }: NewProjectDialogProps) => 
                   </div>
                 </label>
               </Tooltip>
+              <span className="text-xs text-white/60 ml-1 sm:ml-2">{selectedColorName}</span>
             </div>
           </div>
         </div>
         
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/10 flex items-center justify-end gap-3 bg-[#161618]">
+        <div className="px-4 py-4 sm:px-6 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 bg-[#161618]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-white/50 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-sm font-medium"
+            className="w-full sm:w-auto px-4 py-2 text-white/50 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-sm font-medium"
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
             disabled={!selectedModelId}
-            className="px-5 py-2 bg-tesla-red hover:bg-tesla-red/90 disabled:bg-white/10 disabled:text-white/30 text-white rounded-lg font-medium transition-colors text-sm disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-5 py-2 bg-tesla-red hover:bg-tesla-red/90 disabled:bg-white/10 disabled:text-white/30 text-white rounded-lg font-medium transition-colors text-sm disabled:cursor-not-allowed"
           >
             Create Project
           </button>
